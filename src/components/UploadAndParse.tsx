@@ -66,7 +66,7 @@ export default function UploadAndParse({}: Props) {
       {isLoading && <p className="mt-4 text-gray-500">Parsing...</p>}
       {error && <p className="mt-4 text-red-500">Error: {error}</p>}
       {parsedData && (
-        <pre className="mt-4 bg-gray-100 p-4 rounded-lg overflow-x-auto">
+        <pre className="mt-4 bg-gray-100 whitespace-pre-wrap p-4 rounded-lg overflow-x-auto">
           {JSON.stringify(parsedData, null, 2)}
         </pre>
       )}

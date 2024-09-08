@@ -1,15 +1,13 @@
-// app/components/UploadAndParse.tsx
 "use client";
 
 import { useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { parseFile } from "../actions/parse";
+import { Element, Chunk } from "@/types/types";
 
-type Props = {};
-
-export default function UploadAndParse({}: Props) {
-  const [parsedData, setParsedData] = useState<any | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+export default function UploadAndParse() {
+  const [parsedData, setParsedData] = useState<Chunk[] | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [showRawJson, setShowRawJson] = useState<boolean>(false); // State for toggling JSON view
 
@@ -23,7 +21,7 @@ export default function UploadAndParse({}: Props) {
     formData.append("file", acceptedFiles[0]);
 
     try {
-      const data = await parseFile(formData);
+      const data: Chunk[] = await parseFile(formData);
       setParsedData(data);
     } catch (err) {
       setError((err as Error).message || "An error occurred");
@@ -40,20 +38,20 @@ export default function UploadAndParse({}: Props) {
     isDragReject,
   } = useDropzone({ onDrop });
 
-  const extractReadableText = (data: any) => {
+  const extractReadableText = (data: Chunk[] | null) => {
     // Function to extract readable text from JSON
     if (!data) return null;
 
     const contentArray = data[0]?.content || [];
     return contentArray
       .filter(
-        (item: any) =>
+        (item: Element) =>
           item.type === "Title" ||
           item.type === "NarrativeText" ||
           item.type === "EmailAddress" ||
           item.type === "UncategorizedText"
       )
-      .map((item: any) => (
+      .map((item: Element) => (
         <div key={item.element_id} className="mb-2">
           <strong>{item.type}:</strong> {item.text}
         </div>

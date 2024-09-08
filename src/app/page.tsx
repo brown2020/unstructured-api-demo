@@ -1,6 +1,5 @@
 import UploadAndParse from "@/components/UploadAndParse";
 
-type Props = {};
-export default function HomePage({}: Props) {
+export default function HomePage() {
   return <UploadAndParse />;
 }

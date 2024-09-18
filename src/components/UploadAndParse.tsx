@@ -9,7 +9,7 @@ export default function UploadAndParse() {
   const [parsedData, setParsedData] = useState<Chunk[] | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [showRawJson, setShowRawJson] = useState<boolean>(false); // State for toggling JSON view
+  const [showRawJson, setShowRawJson] = useState<boolean>(false);
 
   const onDrop = async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
@@ -22,9 +22,15 @@ export default function UploadAndParse() {
 
     try {
       const data: Chunk[] = await parseFile(formData);
-      setParsedData(data);
+      if (data && data.length > 0) {
+        setParsedData(data);
+      } else {
+        setError("No readable content found.");
+      }
     } catch (err) {
-      setError((err as Error).message || "An error occurred");
+      setError(
+        (err as Error).message || "An error occurred while parsing the file."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -39,23 +45,81 @@ export default function UploadAndParse() {
   } = useDropzone({ onDrop });
 
   const extractReadableText = (data: Chunk[] | null) => {
-    // Function to extract readable text from JSON
-    if (!data) return null;
+    if (!data) return <p>No content to display.</p>;
 
     const contentArray = data[0]?.content || [];
-    return contentArray
-      .filter(
-        (item: Element) =>
-          item.type === "Title" ||
-          item.type === "NarrativeText" ||
-          item.type === "EmailAddress" ||
-          item.type === "UncategorizedText"
-      )
-      .map((item: Element) => (
-        <div key={item.element_id} className="mb-2">
-          <strong>{item.type}:</strong> {item.text}
+    if (contentArray.length === 0)
+      return <p>No readable content found in the file.</p>;
+
+    // Group elements by their parent ID, if applicable
+    const groupedContent = contentArray.reduce((acc, item) => {
+      const parentId = item.metadata.parent_id || "root"; // "root" for elements without a parent
+      if (!acc[parentId]) {
+        acc[parentId] = [];
+      }
+      acc[parentId].push(item);
+      return acc;
+    }, {} as Record<string, Element[]>);
+
+    // Render the grouped elements
+    return Object.keys(groupedContent).map((parentId) => {
+      const elements = groupedContent[parentId];
+      return (
+        <div key={parentId} className="grouped-content">
+          {elements.map((item) => {
+            switch (item.type) {
+              case "Title":
+              case "NarrativeText":
+                return (
+                  <div key={item.element_id} className="mb-2">
+                    <strong>{item.type}:</strong> {item.text}
+                  </div>
+                );
+
+              case "UncategorizedText":
+                // Ignore elements that are just numbers if PageNumber is also present
+                if (/^\d+$/.test(item.text || "")) {
+                  return null;
+                }
+                return (
+                  <div key={item.element_id} className="mb-2 text-gray-500">
+                    <strong>Uncategorized:</strong> {item.text}
+                  </div>
+                );
+
+              case "Header":
+              case "Footer":
+                return (
+                  <div key={item.element_id} className="mb-2 font-bold text-lg">
+                    {item.text} ({item.type})
+                  </div>
+                );
+
+              case "PageNumber":
+                return (
+                  <div key={item.element_id} className="mb-2">
+                    <strong>Page:</strong> {item.text}
+                  </div>
+                );
+
+              case "Image":
+                return (
+                  <div key={item.element_id} className="mb-2">
+                    <strong>Image:</strong> {item.text || "No descriptive text"}
+                  </div>
+                );
+
+              default:
+                return (
+                  <div key={item.element_id} className="mb-2">
+                    <strong>{item.type}:</strong> {item.text || "N/A"}
+                  </div>
+                );
+            }
+          })}
         </div>
-      ));
+      );
+    });
   };
 
   return (
@@ -67,9 +131,9 @@ export default function UploadAndParse() {
           border-2 border-dashed border-gray-300 
           rounded-lg p-6 text-center cursor-pointer 
           transition-colors duration-300 
-          ${isDragActive && "bg-gray-100"} 
-          ${isDragAccept && "border-green-500"} 
-          ${isDragReject && "border-red-500"}
+          ${isDragActive ? "bg-gray-100" : ""}
+          ${isDragAccept ? "border-green-500" : ""}
+          ${isDragReject ? "border-red-500" : ""}
         `}
       >
         <input {...getInputProps()} />

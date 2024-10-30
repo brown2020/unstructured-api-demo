@@ -19,7 +19,8 @@ export interface Element {
     | "Heading"
     | "Header"
     | "Table"
-    | "Footer"; // New Footer type
+    | "Footer"
+    | "PageBreak";
   element_id: string;
   text?: string; // Optional, since some elements (like images) may not have text
   metadata: Metadata; // General metadata for the element

@@ -61,28 +61,30 @@ export default function UploadAndParse() {
       return acc;
     }, {} as Record<string, Element[]>);
 
-    // Render the grouped elements
+    // Render the grouped elements, filtering out "PageBreak" items
     return Object.keys(groupedContent).map((parentId) => {
-      const elements = groupedContent[parentId];
+      const elements = groupedContent[parentId].filter(
+        (item) => item.type !== "PageBreak"
+      );
       return (
         <div key={parentId} className="grouped-content">
-          {elements.map((item) => {
+          {elements.map((item, index) => {
+            const uniqueKey = `${parentId}-${item.element_id}-${index}`;
             switch (item.type) {
               case "Title":
               case "NarrativeText":
                 return (
-                  <div key={item.element_id} className="mb-2">
+                  <div key={uniqueKey} className="mb-2">
                     <strong>{item.type}:</strong> {item.text}
                   </div>
                 );
 
               case "UncategorizedText":
-                // Ignore elements that are just numbers if PageNumber is also present
                 if (/^\d+$/.test(item.text || "")) {
                   return null;
                 }
                 return (
-                  <div key={item.element_id} className="mb-2 text-gray-500">
+                  <div key={uniqueKey} className="mb-2 text-gray-500">
                     <strong>Uncategorized:</strong> {item.text}
                   </div>
                 );
@@ -90,28 +92,28 @@ export default function UploadAndParse() {
               case "Header":
               case "Footer":
                 return (
-                  <div key={item.element_id} className="mb-2 font-bold text-lg">
+                  <div key={uniqueKey} className="mb-2 font-bold text-lg">
                     {item.text} ({item.type})
                   </div>
                 );
 
               case "PageNumber":
                 return (
-                  <div key={item.element_id} className="mb-2">
+                  <div key={uniqueKey} className="mb-2">
                     <strong>Page:</strong> {item.text}
                   </div>
                 );
 
               case "Image":
                 return (
-                  <div key={item.element_id} className="mb-2">
+                  <div key={uniqueKey} className="mb-2">
                     <strong>Image:</strong> {item.text || "No descriptive text"}
                   </div>
                 );
 
               default:
                 return (
-                  <div key={item.element_id} className="mb-2">
+                  <div key={uniqueKey} className="mb-2">
                     <strong>{item.type}:</strong> {item.text || "N/A"}
                   </div>
                 );

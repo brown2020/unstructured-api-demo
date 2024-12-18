@@ -171,12 +171,12 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ## 📫 Contact
 
-Your Name - [@your_twitter](https://twitter.com/your_twitter)
+Email: [info@ignitechannel.com](mailto:info@ignitechannel.com)
 
 Project Link: [https://github.com/brown2020/unstructured-api-demo](https://github.com/brown2020/unstructured-api-demo)
 
 ---
 
 <div align="center">
-Made with ❤️ by [Your Name/Team]
+Made with ❤️ by Ignite Channel
 </div>

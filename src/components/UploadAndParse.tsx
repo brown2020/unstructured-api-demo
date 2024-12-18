@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { parseFile } from "../actions/parse";
-import { Element, Chunk } from "@/types/types";
+import { Chunk } from "@/types/types";
+import { DocumentContent } from "./DocumentContent";
+import { LoadingSkeleton } from "./LoadingSkeleton";
 
 export default function UploadAndParse() {
   const [parsedData, setParsedData] = useState<Chunk[] | null>(null);
@@ -21,7 +23,7 @@ export default function UploadAndParse() {
     formData.append("file", acceptedFiles[0]);
 
     try {
-      const data: Chunk[] = await parseFile(formData);
+      const data = await parseFile(formData);
       if (data && data.length > 0) {
         setParsedData(data);
       } else {
@@ -42,132 +44,72 @@ export default function UploadAndParse() {
     isDragActive,
     isDragAccept,
     isDragReject,
-  } = useDropzone({ onDrop });
-
-  const extractReadableText = (data: Chunk[] | null) => {
-    if (!data) return <p>No content to display.</p>;
-
-    const contentArray = data[0]?.content || [];
-    if (contentArray.length === 0)
-      return <p>No readable content found in the file.</p>;
-
-    // Group elements by their parent ID, if applicable
-    const groupedContent = contentArray.reduce((acc, item) => {
-      const parentId = item.metadata.parent_id || "root"; // "root" for elements without a parent
-      if (!acc[parentId]) {
-        acc[parentId] = [];
-      }
-      acc[parentId].push(item);
-      return acc;
-    }, {} as Record<string, Element[]>);
-
-    // Render the grouped elements, filtering out "PageBreak" items
-    return Object.keys(groupedContent).map((parentId) => {
-      const elements = groupedContent[parentId].filter(
-        (item) => item.type !== "PageBreak"
-      );
-      return (
-        <div key={parentId} className="grouped-content">
-          {elements.map((item, index) => {
-            const uniqueKey = `${parentId}-${item.element_id}-${index}`;
-            switch (item.type) {
-              case "Title":
-              case "NarrativeText":
-                return (
-                  <div key={uniqueKey} className="mb-2">
-                    <strong>{item.type}:</strong> {item.text}
-                  </div>
-                );
-
-              case "UncategorizedText":
-                if (/^\d+$/.test(item.text || "")) {
-                  return null;
-                }
-                return (
-                  <div key={uniqueKey} className="mb-2 text-gray-500">
-                    <strong>Uncategorized:</strong> {item.text}
-                  </div>
-                );
-
-              case "Header":
-              case "Footer":
-                return (
-                  <div key={uniqueKey} className="mb-2 font-bold text-lg">
-                    {item.text} ({item.type})
-                  </div>
-                );
-
-              case "PageNumber":
-                return (
-                  <div key={uniqueKey} className="mb-2">
-                    <strong>Page:</strong> {item.text}
-                  </div>
-                );
-
-              case "Image":
-                return (
-                  <div key={uniqueKey} className="mb-2">
-                    <strong>Image:</strong> {item.text || "No descriptive text"}
-                  </div>
-                );
-
-              default:
-                return (
-                  <div key={uniqueKey} className="mb-2">
-                    <strong>{item.type}:</strong> {item.text || "N/A"}
-                  </div>
-                );
-            }
-          })}
-        </div>
-      );
-    });
-  };
+  } = useDropzone({
+    onDrop,
+    accept: {
+      "application/pdf": [".pdf"],
+      "image/*": [".png", ".jpg", ".jpeg"],
+    },
+  });
 
   return (
-    <div>
+    <div className="max-w-4xl mx-auto px-4">
       <div
         {...getRootProps()}
         className={`
-          dropzone 
-          border-2 border-dashed border-gray-300 
-          rounded-lg p-6 text-center cursor-pointer 
-          transition-colors duration-300 
-          ${isDragActive ? "bg-gray-100" : ""}
-          ${isDragAccept ? "border-green-500" : ""}
-          ${isDragReject ? "border-red-500" : ""}
+          relative overflow-hidden
+          border-2 border-dashed rounded-xl
+          p-8 text-center cursor-pointer
+          transition-all duration-200 ease-in-out
+          ${isDragActive ? "bg-gray-50 border-gray-400" : "border-gray-300"}
+          ${isDragAccept ? "border-green-500 bg-green-50" : ""}
+          ${isDragReject ? "border-red-500 bg-red-50" : ""}
         `}
       >
         <input {...getInputProps()} />
-        <p>
-          {isDragAccept
-            ? "Drop it here!"
-            : isDragReject
-            ? "File type not accepted"
-            : "Drag & drop a file here, or click to select one"}
-        </p>
+        <div className="space-y-4">
+          <div className="text-4xl text-gray-400">📄</div>
+          <p className="text-lg text-gray-600">
+            {isDragAccept
+              ? "Drop it like it's hot! 🔥"
+              : isDragReject
+              ? "Sorry, this file type is not supported 😕"
+              : "Drag & drop your document here, or click to browse"}
+          </p>
+          <p className="text-sm text-gray-400">
+            Supports PDF, PNG, and JPEG files
+          </p>
+        </div>
       </div>
 
-      {isLoading && <p className="mt-4 text-gray-500">Parsing...</p>}
-      {error && <p className="mt-4 text-red-500">Error: {error}</p>}
+      {error && (
+        <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+          <p className="text-red-600 flex items-center">
+            <span className="mr-2">⚠️</span>
+            {error}
+          </p>
+        </div>
+      )}
 
-      {parsedData && (
-        <div className="mt-4">
-          <button
-            onClick={() => setShowRawJson(!showRawJson)}
-            className="mb-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            {showRawJson ? "Show Readable Format" : "Show Raw JSON"}
-          </button>
-          {showRawJson ? (
-            <pre className="bg-gray-100 whitespace-pre-wrap p-4 rounded-lg overflow-x-auto">
-              {JSON.stringify(parsedData, null, 2)}
-            </pre>
-          ) : (
-            <div className="bg-gray-100 p-4 rounded-lg">
-              {extractReadableText(parsedData)}
-            </div>
-          )}
+      {isLoading && (
+        <div className="mt-6">
+          <LoadingSkeleton />
+        </div>
+      )}
+
+      {parsedData && !isLoading && (
+        <div className="mt-6 space-y-4">
+          <div className="flex justify-end">
+            <button
+              onClick={() => setShowRawJson(!showRawJson)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 
+                         rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 
+                         focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            >
+              {showRawJson ? "Show Readable Format" : "Show Raw JSON"}
+            </button>
+          </div>
+          <DocumentContent data={parsedData} showRawJson={showRawJson} />
         </div>
       )}
     </div>

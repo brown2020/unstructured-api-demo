@@ -4,102 +4,136 @@ import { Element, Chunk } from "@/types/types";
 import { UnstructuredClient } from "unstructured-client";
 import { Strategy } from "unstructured-client/sdk/models/shared/index.js";
 
+interface UnstructuredConfig {
+  apiKey: string;
+  apiURL: string;
+}
+
+interface ParseError extends Error {
+  statusCode?: number;
+  details?: string;
+}
+
+function getUnstructuredConfig(): UnstructuredConfig {
+  const apiKey = process.env.UNSTRUCTURED_API_KEY;
+  const apiURL = process.env.UNSTRUCTURED_API_URL;
+
+  if (!apiKey || !apiURL) {
+    throw new Error("Missing Unstructured API configuration");
+  }
+
+  return { apiKey, apiURL };
+}
+
+function createUnstructuredClient(
+  config: UnstructuredConfig
+): UnstructuredClient {
+  return new UnstructuredClient({
+    security: { apiKeyAuth: config.apiKey },
+    serverURL: config.apiURL,
+  });
+}
+
+async function processFileUpload(
+  formData: FormData
+): Promise<{ buffer: ArrayBuffer; filename: string }> {
+  const file = formData.get("file") as File;
+
+  if (!file) {
+    throw new Error("No file uploaded");
+  }
+
+  const buffer = await file.arrayBuffer();
+  return { buffer, filename: file.name };
+}
+
+function organizeElementsIntoChunks(elements: Element[]): Chunk[] {
+  const chunks: Chunk[] = [];
+  let currentChunk: Element[] = [];
+  let currentHeading: string | null = null;
+
+  for (const element of elements) {
+    if (element.type === "Heading") {
+      if (currentChunk.length > 0) {
+        chunks.push({ heading: currentHeading, content: currentChunk });
+      }
+      currentChunk = [];
+      currentHeading = element.text || null;
+    } else {
+      currentChunk.push(element);
+    }
+  }
+
+  if (currentChunk.length > 0) {
+    chunks.push({ heading: currentHeading, content: currentChunk });
+  }
+
+  return chunks;
+}
+
+// Update the UnstructuredResponse interface to match the API response
+interface UnstructuredResponse {
+  statusCode: number;
+  elements?: Element[];
+  rawResponse?: Response;
+}
+
+async function handleUnstructuredResponse(
+  response: UnstructuredResponse
+): Promise<Element[]> {
+  if (response.statusCode !== 200) {
+    const error: ParseError = new Error("Error processing file");
+    error.statusCode = response.statusCode;
+
+    if (response.rawResponse) {
+      try {
+        const errorData = await response.rawResponse.json();
+        error.details = errorData.error;
+      } catch {
+        // Ignore JSON parsing errors in error response
+      }
+    }
+
+    throw error;
+  }
+
+  if (!response.elements?.length) {
+    throw new Error("No elements found in the response");
+  }
+
+  return response.elements as Element[];
+}
+
 export async function parseFile(
   formData: FormData,
   isHighRes: boolean = false
 ): Promise<Chunk[]> {
-  const file = formData.get("file") as File;
-
-  if (!file) {
-    console.error("No file uploaded");
-    throw new Error("No file uploaded");
-  }
-
-  console.log("File uploaded:", file.name, "Size:", file.size);
-
-  const fileData = await file.arrayBuffer();
-  console.log("File data loaded. Byte length:", fileData.byteLength);
-
-  const apiKey = process.env.UNSTRUCTURED_API_KEY || "";
-  const apiURL = process.env.UNSTRUCTURED_API_URL || "";
-
-  console.log("Initializing client with API URL:", apiURL);
-
-  const client = new UnstructuredClient({
-    security: {
-      apiKeyAuth: apiKey,
-    },
-    serverURL: apiURL,
-  });
-
   try {
-    const response = await client.general.partition({
+    const config = getUnstructuredConfig();
+    const client = createUnstructuredClient(config);
+    const { buffer, filename } = await processFileUpload(formData);
+
+    const partitionResponse = await client.general.partition({
       partitionParameters: {
         files: {
-          content: fileData, // Use fileData directly as ArrayBuffer
-          fileName: file.name,
+          content: buffer,
+          fileName: filename,
         },
         strategy: isHighRes ? Strategy.HiRes : Strategy.Auto,
       },
     });
 
-    console.log("Response status code:", response.statusCode);
+    const response: UnstructuredResponse = {
+      statusCode: 200,
+      elements: partitionResponse.elements as Element[],
+    };
 
-    if (response.statusCode === 200) {
-      console.log("Response received successfully.");
-
-      if (!response.elements) {
-        console.error("No elements found in the response");
-        throw new Error("No elements found in the response");
-      }
-
-      const elements = response.elements as Element[];
-      console.log("Number of elements received:", elements.length);
-
-      const chunks: Chunk[] = [];
-      let currentChunk: Element[] = [];
-      let currentHeading: string | null = null;
-
-      for (const element of elements) {
-        console.log("Processing element:", element);
-
-        if (element.type === "Heading") {
-          if (currentChunk.length > 0) {
-            chunks.push({ heading: currentHeading, content: currentChunk });
-          }
-          currentChunk = [];
-          currentHeading = element.text || null;
-        } else {
-          currentChunk.push(element);
-        }
-      }
-
-      if (currentChunk.length > 0) {
-        chunks.push({ heading: currentHeading, content: currentChunk });
-      }
-
-      console.log("Chunks created:", chunks);
-      return chunks;
-    } else {
-      let errorMessage = "Error processing file";
-      console.error("Error status code received:", response.statusCode);
-
-      if (response.rawResponse) {
-        try {
-          const errorData = await response.rawResponse.json();
-          if (errorData && "error" in errorData) {
-            errorMessage = errorData.error as string;
-          }
-        } catch (jsonError) {
-          console.error("Error parsing error response:", jsonError);
-        }
-      }
-
-      console.error("Error message:", errorMessage);
-      throw new Error(errorMessage);
-    }
+    const elements = await handleUnstructuredResponse(response);
+    return organizeElementsIntoChunks(elements);
   } catch (error) {
-    console.error("Error during file parsing:", error);
-    throw new Error("An error occurred while processing the file.");
+    console.error("File parsing error:", error);
+    throw error instanceof Error
+      ? error
+      : new Error("An unexpected error occurred while processing the file.");
   }
 }

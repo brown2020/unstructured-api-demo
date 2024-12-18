@@ -44,20 +44,44 @@ A modern web application demonstrating the power of Unstructured.io's API for pr
 
 ### Core Technologies
 
-- **[Next.js 14](https://nextjs.org/)**: React framework with server components
-- **[TypeScript](https://www.typescriptlang.org/)**: Static typing and enhanced IDE support
-- **[Tailwind CSS](https://tailwindcss.com/)**: Utility-first styling
-- **[Unstructured API](https://unstructured.io/)**: Document processing engine
+- **[Next.js 15](https://nextjs.org/)**: Latest React framework with server components and server actions
+- **[React 19](https://reactjs.org/)**: Latest React version with improved performance
+- **[TypeScript](https://www.typescriptlang.org/)**: Type-safe development with version 5.6.2
+- **[Tailwind CSS](https://tailwindcss.com/)**: Utility-first CSS framework version 3.4.12
+- **[Unstructured API](https://unstructured.io/)**: Document processing engine with version 0.18.1
 
 ### Key Dependencies
 
 ```json
 {
-  "next": "^15.0.2",
-  "react": "^19.0.0",
-  "react-dropzone": "^14.2.3",
-  "unstructured-client": "^0.18.1"
+  "dependencies": {
+    "next": "^15.0.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-dropzone": "^14.2.3",
+    "unstructured-client": "^0.18.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.5",
+    "@types/react": "^19.0.1",
+    "@types/react-dom": "^19.0.2",
+    "eslint": "^9.15.0",
+    "eslint-config-next": "^15.0.2",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.12",
+    "typescript": "^5.6.2"
+  }
 }
+```
+
+### Development Scripts
+
+```bash
+# Available commands
+npm run dev      # Start development server
+npm run build    # Build for production
+npm run start    # Start production server
+npm run lint     # Run ESLint checks
 ```
 
 ## 🏗️ Project Structure

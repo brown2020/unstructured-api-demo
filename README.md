@@ -1,104 +1,158 @@
 # Unstructured API Demo
 
-This repository demonstrates how to use the Unstructured API to process and analyze various types of unstructured data, such as PDFs and DOCX files. The goal is to make it easier to extract meaningful information from documents that are often difficult to parse and structure.
+<div align="center">
 
-## Motivation
+[![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC)](https://tailwindcss.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-In many applications, unstructured data (like scanned documents, emails, and reports) holds valuable information. However, extracting and structuring this information is often challenging. The Unstructured API simplifies this process by providing a robust, flexible solution to convert unstructured data into structured formats, making it easier to analyze and integrate into your applications.
+[Demo](your-demo-url) · [Documentation](your-docs-url) · [Report Bug](issues-url) · [Request Feature](issues-url)
 
-## Features
+</div>
 
-- **Data Ingestion:** Supports multiple data formats (PDF, DOCX, HTML, etc.).
-- **Data Processing:** Converts unstructured data into structured formats.
-- **Integration:** Examples of integrating the API with Next.js and React.
+## 🚀 Quick Start
 
-## Getting Started
+```bash
+# Clone the repository
+git clone https://github.com/brown2020/unstructured-api-demo.git
+
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env.local
+
+# Start development server
+npm run dev
+```
+
+## 📖 Overview
+
+A modern web application demonstrating the power of Unstructured.io's API for processing and analyzing unstructured data. Built with Next.js 14, TypeScript, and Tailwind CSS, this demo showcases how to transform complex documents into structured, actionable data.
+
+### ✨ Key Features
+
+- 📄 **Multi-Format Support**: Process PDFs, DOCX, images, and more
+- 🔄 **Real-Time Processing**: Instant document parsing and structuring
+- 🎨 **Modern UI**: Clean, responsive interface with Tailwind CSS
+- 🔒 **Type Safety**: Full TypeScript implementation
+- ⚡ **Server Actions**: Efficient server-side processing with Next.js
+- 🔍 **Smart Parsing**: Intelligent document structure recognition
+
+## 🛠️ Technical Stack
+
+### Core Technologies
+
+- **[Next.js 14](https://nextjs.org/)**: React framework with server components
+- **[TypeScript](https://www.typescriptlang.org/)**: Static typing and enhanced IDE support
+- **[Tailwind CSS](https://tailwindcss.com/)**: Utility-first styling
+- **[Unstructured API](https://unstructured.io/)**: Document processing engine
+
+### Key Dependencies
+
+```json
+{
+  "next": "^15.0.2",
+  "react": "^19.0.0",
+  "react-dropzone": "^14.2.3",
+  "unstructured-client": "^0.18.1"
+}
+```
+
+## 🏗️ Project Structure
+
+```
+src/
+├── actions/
+│   └── parse.ts           # Server actions for document processing
+├── components/
+│   ├── DocumentContent.tsx # Document rendering component
+│   ├── ErrorBoundary.tsx  # Error handling wrapper
+│   ├── LoadingSkeleton.tsx # Loading state component
+│   └── UploadAndParse.tsx # Main upload component
+├── types/
+│   └── types.d.ts        # TypeScript definitions
+└── utils/
+    ├── cache.ts          # Caching utilities
+    └── rateLimit.ts      # Rate limiting implementation
+```
+
+## 🚀 Getting Started
 
 ### Prerequisites
 
-- Node.js (latest LTS version)
-- An API key and URL from [Unstructured.io](https://unstructured.io/)
+- Node.js 18+
+- npm or yarn
+- Unstructured API credentials
 
-### Installation
+### Environment Setup
 
-1. Clone the repository:
+Create a `.env.local` file with:
 
-   ```bash
-   git clone https://github.com/brown2020/unstructured-api-demo.git
-   cd unstructured-api-demo
-   ```
+```env
+UNSTRUCTURED_API_KEY=your_api_key
+UNSTRUCTURED_API_URL=your_api_url
+```
 
-2. Install dependencies:
+### Development
 
-   ```bash
-   npm install
-   ```
+```bash
+# Start development server
+npm run dev
 
-3. Create a `.env.local` file by copying `.env.example`:
+# Run type checking
+npm run type-check
 
-   ```bash
-   cp .env.example .env.local
-   ```
+# Build for production
+npm run build
 
-4. Replace the placeholder values in `.env.local` with your actual `UNSTRUCTURED_API_KEY` and `UNSTRUCTURED_API_URL`.
+# Start production server
+npm start
+```
 
-### Running the Application
+## 🔧 Configuration
 
-- **Development Server**:
+### Rate Limiting
 
-  ```bash
-  npm run dev
-  ```
+```typescript
+// src/utils/rateLimit.ts
+const REQUESTS_PER_MINUTE = 10;
+```
 
-- **Build for Production**:
+### Cache Duration
 
-  ```bash
-  npm run build
-  npm start
-  ```
+```typescript
+// src/utils/cache.ts
+const CACHE_DURATION = 1000 * 60 * 60; // 1 hour
+```
 
-### Usage
+## 🤝 Contributing
 
-1. Navigate to the upload page.
-2. Drag & drop or select a file to upload.
-3. The file will be parsed, and the structured data will be displayed.
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-## Technologies Used
+## 📝 License
 
-### [Unstructured.io](https://unstructured.io/)
+Distributed under the MIT License. See `LICENSE` for more information.
 
-The core API for parsing unstructured data, enabling the conversion of diverse document formats into structured, machine-readable data.
+## 🙏 Acknowledgments
 
-### [Next.js 14](https://nextjs.org/)
+- [Unstructured.io](https://unstructured.io/) for their excellent API
+- [Vercel](https://vercel.com) for Next.js and hosting
+- [Tailwind Labs](https://tailwindcss.com/) for the CSS framework
 
-A powerful React framework for building fast, server-rendered web applications with rich features like static generation, server-side rendering, and server actions.
+## 📫 Contact
 
-### [Next.js Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions)
+Your Name - [@your_twitter](https://twitter.com/your_twitter)
 
-Server Actions in Next.js 14 allow for seamless integration of server-side logic directly into your React components, improving data handling and performance.
+Project Link: [https://github.com/brown2020/unstructured-api-demo](https://github.com/brown2020/unstructured-api-demo)
 
-### [Tailwind CSS](https://tailwindcss.com/)
+---
 
-A utility-first CSS framework that enables rapid UI development by providing a set of classes for styling directly in your HTML.
-
-### [TypeScript](https://www.typescriptlang.org/)
-
-A typed superset of JavaScript that adds static types, making code more robust and easier to debug.
-
-### [React Dropzone](https://react-dropzone.js.org/)
-
-A React component for handling file uploads through drag-and-drop, simplifying user interactions with file input fields.
-
-## Code Overview
-
-- **Server Actions**: Located in `app/actions/parse.ts`, handles file parsing using the Unstructured API.
-- **Components**:
-  - `UploadAndParse`: Handles file uploads and displays parsed data.
-
-### Contributing
-
-Submit issues and pull requests for enhancements and bug fixes.
-
-### License
-
-This project is licensed under the MIT License.
+<div align="center">
+Made with ❤️ by [Your Name/Team]
+</div>

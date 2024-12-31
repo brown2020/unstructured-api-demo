@@ -26,9 +26,17 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         <div className="p-4 bg-red-50 border border-red-200 rounded">
-          <h2>Something went wrong.</h2>
+          <h2 className="font-semibold text-red-700">Something went wrong</h2>
+          <p className="mt-1 text-sm text-red-600">
+            {this.state.error?.message}
+            {this.state.error?.stack && (
+              <span className="block mt-2 text-xs text-red-500 opacity-75">
+                {this.state.error.stack.split("\n")[0]}
+              </span>
+            )}
+          </p>
           <button
-            className="mt-2 px-4 py-2 bg-red-500 text-white rounded"
+            className="mt-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
             onClick={() => this.setState({ hasError: false })}
           >
             Try again

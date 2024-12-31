@@ -5,6 +5,10 @@ interface DocumentContentProps {
   showRawJson: boolean;
 }
 
+interface DocumentElementProps {
+  element: Element;
+}
+
 export function DocumentContent({ data, showRawJson }: DocumentContentProps) {
   if (!data) return null;
 
@@ -36,7 +40,7 @@ export function DocumentContent({ data, showRawJson }: DocumentContentProps) {
   );
 }
 
-function DocumentElement({ element }: { element: Element }) {
+function DocumentElement({ element }: DocumentElementProps) {
   switch (element.type) {
     case "Title":
       return (

@@ -13,7 +13,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-dropzone": "^14.2.3",
-    "unstructured-client": "^0.18.1"
+    "unstructured-client": "^0.20.0"
   },
   "devDependencies": {
     "@types/node": "^22.5.5",

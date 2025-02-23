@@ -30,7 +30,7 @@ export function DocumentContent({ data, showRawJson }: DocumentContentProps) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm space-y-4">
+    <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-xs space-y-4">
       {contentArray
         .filter((item) => item.type !== "PageBreak")
         .map((item, index) => (

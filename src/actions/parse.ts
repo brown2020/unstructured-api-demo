@@ -123,9 +123,31 @@ export async function parseFile(
       },
     });
 
+    // Debug the response structure
+    console.log("partitionResponse type:", typeof partitionResponse);
+
+    // Process the response based on its type
+    // According to the SDK, PartitionResponse can be string | Array<{[k: string]: any}>
+    let parsedElements: Element[] = [];
+
+    if (typeof partitionResponse === "string") {
+      // If it's a string, parse it to JSON
+      try {
+        const parsedResponse = JSON.parse(partitionResponse);
+        if (Array.isArray(parsedResponse)) {
+          parsedElements = parsedResponse as Element[];
+        }
+      } catch (e) {
+        console.error("Error parsing response string:", e);
+      }
+    } else if (Array.isArray(partitionResponse)) {
+      // If it's already an array, use it directly
+      parsedElements = partitionResponse as Element[];
+    }
+
     const response: UnstructuredResponse = {
       statusCode: 200,
-      elements: partitionResponse.elements as Element[],
+      elements: parsedElements,
     };
 
     const elements = await handleUnstructuredResponse(response);

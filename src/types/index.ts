@@ -31,3 +31,14 @@ export interface Chunk {
   heading: string | null; // Chunks may or may not have headings
   content: Element[]; // Array of elements within the chunk
 }
+
+// API related types
+export interface ParseError extends Error {
+  statusCode?: number;
+  details?: string;
+}
+
+export interface UnstructuredConfig {
+  apiKey: string;
+  apiURL: string;
+}

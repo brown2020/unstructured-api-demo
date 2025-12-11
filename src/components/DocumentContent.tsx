@@ -17,8 +17,14 @@ export function DocumentContent({ data, showRawJson }: DocumentContentProps) {
     );
   }
 
-  const contentArray = data[0]?.content || [];
-  if (contentArray.length === 0) {
+  const normalizedChunks = data
+    .map((chunk) => ({
+      heading: chunk.heading,
+      content: chunk.content.filter((item) => item.type !== "PageBreak"),
+    }))
+    .filter((chunk) => chunk.content.length > 0);
+
+  if (normalizedChunks.length === 0) {
     return (
       <div className="text-gray-500 text-center py-8">
         No readable content found in the file.
@@ -27,12 +33,27 @@ export function DocumentContent({ data, showRawJson }: DocumentContentProps) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-xs space-y-4">
-      {contentArray
-        .filter((item) => item.type !== "PageBreak")
-        .map((item, index) => (
-          <DocumentElement key={`${item.element_id}-${index}`} element={item} />
-        ))}
+    <div className="space-y-6">
+      {normalizedChunks.map((chunk, chunkIndex) => (
+        <section
+          key={`${chunk.heading ?? "chunk"}-${chunkIndex}`}
+          className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm space-y-4"
+        >
+          {chunk.heading && (
+            <h3 className="text-xl font-semibold text-gray-900">
+              {chunk.heading}
+            </h3>
+          )}
+          <div className="space-y-4">
+            {chunk.content.map((item, elementIndex) => (
+              <DocumentElement
+                key={`${item.element_id}-${elementIndex}`}
+                element={item}
+              />
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   );
 }

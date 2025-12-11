@@ -33,6 +33,18 @@ const elementComponents = {
     </div>
   ),
 
+  EmailAddress: ({ element }: DocumentElementProps) => {
+    if (!element.text) return null;
+    return (
+      <a
+        href={`mailto:${element.text}`}
+        className="text-blue-600 hover:text-blue-500 underline decoration-dotted"
+      >
+        {element.text}
+      </a>
+    );
+  },
+
   PageNumber: ({ element }: DocumentElementProps) => (
     <div className="text-sm text-gray-400">Page {element.text}</div>
   ),
@@ -45,6 +57,39 @@ const elementComponents = {
       </p>
     </div>
   ),
+
+  Table: ({ element }: DocumentElementProps) => {
+    if (!element.text) return null;
+    const rows = element.text
+      .split("\n")
+      .map((row) => row.split("\t"))
+      .filter((cells) => cells.length > 0);
+
+    if (rows.length === 0) {
+      return null;
+    }
+
+    return (
+      <div className="overflow-x-auto rounded-lg border border-gray-200">
+        <table className="min-w-full divide-y divide-gray-200 text-sm">
+          <tbody className="divide-y divide-gray-100">
+            {rows.map((cells, rowIndex) => (
+              <tr key={`row-${rowIndex}`}>
+                {cells.map((cell, cellIndex) => (
+                  <td
+                    key={`cell-${rowIndex}-${cellIndex}`}
+                    className="px-3 py-2 whitespace-nowrap text-gray-700"
+                  >
+                    {cell || "\u00A0"}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  },
 
   Default: ({ element }: DocumentElementProps) => (
     <div className="text-gray-700">

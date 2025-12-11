@@ -13,11 +13,12 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-dropzone": "^14.2.3",
-    "unstructured-client": "^0.29.1"
+    "unstructured-client": "^0.29.1",
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.8",
-    "@types/node": "^24.0.4",
+    "@types/node": "^25.0.0",
     "@types/react": "^19.0.1",
     "@types/react-dom": "^19.0.2",
     "eslint": "^9.15.0",

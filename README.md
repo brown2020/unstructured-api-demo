@@ -1,182 +1,172 @@
 # Unstructured API Demo
 
-<div align="center">
+Modern document-parsing demo that showcases how to stream PDFs and images through [Unstructured.io](https://unstructured.io) using **Next.js 16**, **React 19**, and **TypeScript**. The UI runs primarily as server components, while a small upload client island handles drag-and-drop, Zustand-powered state, and raw JSON inspection.
 
-[![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC)](https://tailwindcss.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<p align="center">
+  <a href="https://nextjs.org/"><img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-black" /></a>
+  <a href="https://www.typescriptlang.org/"><img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.6-3178C6" /></a>
+  <a href="https://tailwindcss.com/"><img alt="Tailwind" src="https://img.shields.io/badge/Tailwind-4.0-06B6D4" /></a>
+  <a href="./LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow" /></a>
+</p>
 
-[Demo](your-demo-url) · [Documentation](your-docs-url) · [Report Bug](issues-url) · [Request Feature](issues-url)
+---
 
-</div>
+## Table of Contents
 
-## 🚀 Quick Start
+1. [Features](#features)
+2. [Architecture](#architecture)
+3. [Package Inventory](#package-inventory)
+4. [Getting Started](#getting-started)
+5. [Environment Variables](#environment-variables)
+6. [Development Scripts](#development-scripts)
+7. [Project Structure](#project-structure)
+8. [Contributing](#contributing)
+9. [License](#license)
 
-```bash
-# Clone the repository
-git clone https://github.com/brown2020/unstructured-api-demo.git
+---
 
-# Install dependencies
-npm install
+## Features
 
-# Set up environment variables
-cp .env.example .env.local
+- **Drag-and-drop uploads** powered by `react-dropzone`, limited to PDFs and images under 10 MB.
+- **Server Actions pipeline** that streams the file buffer directly to `unstructured-client` using the Hi-Res strategy toggle.
+- **Smart chunk rendering**: headings, tables, images, footers, and email addresses are normalized and rendered with semantic UI primitives.
+- **Zustand store** for upload state (loading, errors, raw JSON toggle) to keep the client bundle small and predictable.
+- **Tailwind CSS v4** design system with responsive typography and subtle motion for dropzone states.
 
-# Start development server
-npm run dev
-```
+---
 
-## 📖 Overview
+## Architecture
 
-A modern web application demonstrating the power of Unstructured.io's API for processing and analyzing unstructured data. Built with Next.js 14, TypeScript, and Tailwind CSS, this demo showcases how to transform complex documents into structured, actionable data.
+| Layer | Responsibilities | Key files |
+| --- | --- | --- |
+| **App Router (RSC)** | Layout, metadata, hero copy | `src/app/layout.tsx`, `src/components/UploadAndParse.tsx` |
+| **Client Upload Island** | Drag-and-drop, progress UI, raw JSON toggle | `src/components/upload/ClientUploadPanel.tsx`, `src/hooks/useFileUpload.ts` |
+| **Zustand Store** | Atomic upload state, server action orchestration | `src/stores/upload-store.ts` |
+| **Server Actions** | File validation, parsing via Unstructured | `src/actions/parse.ts`, `src/lib/document-utils.ts`, `src/lib/unstructured-client.ts` |
+| **Rendering** | Typed document elements & chunk layout | `src/components/DocumentContent.tsx`, `src/components/DocumentElements.tsx`, `src/types/index.ts` |
 
-### ✨ Key Features
+---
 
-- 📄 **Multi-Format Support**: Process PDFs, DOCX, images, and more
-- 🔄 **Real-Time Processing**: Instant document parsing and structuring
-- 🎨 **Modern UI**: Clean, responsive interface with Tailwind CSS
-- 🔒 **Type Safety**: Full TypeScript implementation
-- ⚡ **Server Actions**: Efficient server-side processing with Next.js
-- 🔍 **Smart Parsing**: Intelligent document structure recognition
+## Package Inventory
 
-## 🛠️ Technical Stack
+The stack below mirrors the `package-lock.json` and reflects every top-level dependency currently used:
 
-### Core Technologies
+### Runtime Dependencies
 
-- **[Next.js 15](https://nextjs.org/)**: Latest React framework with server components and server actions
-- **[React 19](https://reactjs.org/)**: Latest React version with improved performance
-- **[TypeScript](https://www.typescriptlang.org/)**: Type-safe development with version 5.6.2
-- **[Tailwind CSS](https://tailwindcss.com/)**: Utility-first CSS framework version 3.4.12
-- **[Unstructured API](https://unstructured.io/)**: Document processing engine with version 0.18.1
+| Package | Version | Purpose |
+| --- | --- | --- |
+| `next` | ^16.0.3 | App Router, server actions, RSC |
+| `react`, `react-dom` | ^19.0.0 | UI runtime |
+| `react-dropzone` | ^14.2.3 | Accessible drag-and-drop uploads |
+| `unstructured-client` | ^0.29.1 | Official SDK for Unstructured API |
+| `zustand` | ^5.0.9 | Lightweight upload store |
 
-### Key Dependencies
+### Dev / Build Tooling
 
-```json
-{
-  "dependencies": {
-    "next": "^15.0.2",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "react-dropzone": "^14.2.3",
-    "unstructured-client": "^0.18.1"
-  },
-  "devDependencies": {
-    "@types/node": "^22.5.5",
-    "@types/react": "^19.0.1",
-    "@types/react-dom": "^19.0.2",
-    "eslint": "^9.15.0",
-    "eslint-config-next": "^15.0.2",
-    "postcss": "^8.4.47",
-    "tailwindcss": "^3.4.12",
-    "typescript": "^5.6.2"
-  }
-}
-```
+| Package | Version | Purpose |
+| --- | --- | --- |
+| `tailwindcss`, `@tailwindcss/postcss` | ^4.0.8 | Styling via Tailwind v4 pipeline |
+| `postcss` | ^8.4.47 | CSS transforms |
+| `typescript` | ^5.6.2 | Type safety |
+| `eslint`, `eslint-config-next` | ^9.15.0 / ^16.0.3 | Linting |
+| `@types/node`, `@types/react`, `@types/react-dom` | Latest | Type defs for Node/React |
 
-### Development Scripts
+---
 
-```bash
-# Available commands
-npm run dev      # Start development server
-npm run build    # Build for production
-npm run start    # Start production server
-npm run lint     # Run ESLint checks
-```
-
-## 🏗️ Project Structure
-
-```
-src/
-├── actions/
-│   └── parse.ts           # Server actions for document processing
-├── components/
-│   ├── DocumentContent.tsx # Document rendering component
-│   ├── ErrorBoundary.tsx  # Error handling wrapper
-│   ├── LoadingSkeleton.tsx # Loading state component
-│   └── UploadAndParse.tsx # Main upload component
-├── types/
-│   └── types.d.ts        # TypeScript definitions
-└── utils/
-    ├── cache.ts          # Caching utilities
-    └── rateLimit.ts      # Rate limiting implementation
-```
-
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+
-- npm or yarn
-- Unstructured API credentials
+- Node.js **18.18+** or **20+**
+- npm **10+**
+- Active Unstructured API key and server URL
 
-### Environment Setup
+### Installation
 
-Create a `.env.local` file with:
-
-```env
-UNSTRUCTURED_API_KEY=your_api_key
-UNSTRUCTURED_API_URL=your_api_url
+```bash
+git clone https://github.com/brown2020/unstructured-api-demo.git
+cd unstructured-api-demo
+npm install
+cp .env.example .env.local
 ```
 
 ### Development
 
 ```bash
-# Start development server
-npm run dev
-
-# Run type checking
-npm run type-check
-
-# Build for production
-npm run build
-
-# Start production server
-npm start
+npm run dev        # Start Next.js in development mode
+npm run build      # Create an optimized production build
+npm run start      # Serve the production build
+npm run lint       # Run ESLint (Next.js 16 CLI)
 ```
 
-## 🔧 Configuration
-
-### Rate Limiting
-
-```typescript
-// src/utils/rateLimit.ts
-const REQUESTS_PER_MINUTE = 10;
-```
-
-### Cache Duration
-
-```typescript
-// src/utils/cache.ts
-const CACHE_DURATION = 1000 * 60 * 60; // 1 hour
-```
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📝 License
-
-Distributed under the MIT License. See `LICENSE` for more information.
-
-## 🙏 Acknowledgments
-
-- [Unstructured.io](https://unstructured.io/) for their excellent API
-- [Vercel](https://vercel.com) for Next.js and hosting
-- [Tailwind Labs](https://tailwindcss.com/) for the CSS framework
-
-## 📫 Contact
-
-Email: [info@ignitechannel.com](mailto:info@ignitechannel.com)
-
-Project Link: [https://github.com/brown2020/unstructured-api-demo](https://github.com/brown2020/unstructured-api-demo)
+> **Heads-up:** Next.js 16 currently treats `next lint` script names as project directories. If you encounter “Invalid project directory …/lint”, run `npx next lint` directly as a workaround until the upstream bug is fixed.
 
 ---
 
-<div align="center">
-Made with ❤️ by Ignite Channel
-</div>
+## Environment Variables
+
+Create `.env.local` with the following keys:
+
+```env
+UNSTRUCTURED_API_KEY=your_api_key
+UNSTRUCTURED_API_URL=https://api.unstructured.io/general/v0/general
+```
+
+Optional tweaks:
+
+| Variable | Description |
+| --- | --- |
+| `UNSTRUCTURED_API_URL` | Override default base URL / proxy |
+| `NEXT_PUBLIC_ANALYTICS_ENABLED` | Wire up custom logging if you add it |
+
+---
+
+## Project Structure
+
+```
+src/
+├── actions/
+│   └── parse.ts               # Server action entry point
+├── app/
+│   ├── layout.tsx             # RSC root layout
+│   └── page.tsx               # Home route compostion
+├── components/
+│   ├── DocumentContent.tsx    # Renders normalized chunks
+│   ├── DocumentElements.tsx   # Per-element presenters
+│   ├── LoadingSkeleton.tsx
+│   ├── UploadAndParse.tsx     # Hero + client island slot
+│   └── upload/
+│       └── ClientUploadPanel.tsx
+├── hooks/
+│   └── useFileUpload.ts       # Dropzone + store wiring
+├── lib/
+│   ├── document-utils.ts      # File validation + chunking
+│   └── unstructured-client.ts # SDK wrapper
+├── stores/
+│   └── upload-store.ts        # Zustand store definition
+└── types/
+    └── index.ts               # Shared TypeScript contracts
+```
+
+---
+
+## Contributing
+
+1. Fork the repository.
+2. Create a feature branch: `git checkout -b feature/my-improvement`.
+3. Commit with context: `git commit -m "feat: add table renderer"`.
+4. Push and open a PR describing motivation, testing, and screenshots/video of the flow.
+
+We welcome ideas such as streaming progress indicators, AI summarization via Vercel AI SDK, additional file validations, or automated tests (Jest + React Testing Library).
+
+---
+
+## License
+
+Distributed under the [MIT License](./LICENSE). See the license file for details.
+
+---
+
+### Support
+
+Questions or ideas? Open an issue or reach out at [info@ignitechannel.com](mailto:info@ignitechannel.com). Contributions and feedback are always appreciated!

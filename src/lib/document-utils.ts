@@ -1,7 +1,19 @@
 import { Element, Chunk } from "@/types";
 
 const HEADING_TYPES = new Set<Element["type"]>(["Heading", "Header", "Title"]);
-const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
+export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
+export const ACCEPTED_FILE_TYPES = [
+  "application/pdf",
+  "image/png",
+  "image/jpeg",
+  "image/jpg",
+] as const;
+
+export const ACCEPTED_DROPZONE_TYPES: Record<string, string[]> = {
+  "application/pdf": [".pdf"],
+  "image/png": [".png"],
+  "image/jpeg": [".jpg", ".jpeg"],
+};
 
 export function organizeElementsIntoChunks(elements: Element[]): Chunk[] {
   const chunks: Chunk[] = [];
@@ -58,11 +70,5 @@ export async function processFileUpload(
 }
 
 export function validateFileType(file: File): boolean {
-  const allowedTypes = [
-    "application/pdf",
-    "image/png",
-    "image/jpeg",
-    "image/jpg",
-  ];
-  return allowedTypes.includes(file.type);
+  return ACCEPTED_FILE_TYPES.includes(file.type as (typeof ACCEPTED_FILE_TYPES)[number]);
 }

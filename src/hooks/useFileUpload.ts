@@ -3,10 +3,15 @@ import {
   useDropzone,
   DropzoneRootProps,
   DropzoneInputProps,
+  FileRejection,
 } from "react-dropzone";
 import { Chunk } from "@/types";
 import { useUploadStore } from "@/stores/upload-store";
-import { validateFileType } from "@/lib/document-utils";
+import {
+  ACCEPTED_DROPZONE_TYPES,
+  MAX_FILE_SIZE_BYTES,
+  validateFileType,
+} from "@/lib/document-utils";
 
 interface UseFileUploadReturn {
   parsedData: Chunk[] | null;
@@ -41,8 +46,33 @@ export function useFileUpload(): UseFileUploadReturn {
       return;
     }
 
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      setError("File is too large. Please keep uploads under 10MB.");
+      return;
+    }
+
     await uploadDocument(file);
   }, [setError, uploadDocument]);
+
+  const onDropRejected = useCallback((rejections: FileRejection[]) => {
+    const firstError = rejections[0]?.errors[0];
+    if (!firstError) {
+      setError("Unable to upload this file. Please try again.");
+      return;
+    }
+
+    if (firstError.code === "file-too-large") {
+      setError("File is too large. Please keep uploads under 10MB.");
+      return;
+    }
+
+    if (firstError.code === "file-invalid-type") {
+      setError("Unsupported file type. Please upload a PDF or image file.");
+      return;
+    }
+
+    setError(firstError.message);
+  }, [setError]);
 
   const {
     getRootProps,
@@ -52,11 +82,10 @@ export function useFileUpload(): UseFileUploadReturn {
     isDragReject,
   } = useDropzone({
     onDrop,
+    onDropRejected,
     multiple: false,
-    accept: {
-      "application/pdf": [".pdf"],
-      "image/*": [".png", ".jpg", ".jpeg"],
-    },
+    maxSize: MAX_FILE_SIZE_BYTES,
+    accept: ACCEPTED_DROPZONE_TYPES,
   });
 
   return {

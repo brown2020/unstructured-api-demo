@@ -11,7 +11,7 @@ export function DocumentContent({ data, showRawJson }: DocumentContentProps) {
 
   if (showRawJson) {
     return (
-      <pre className="bg-gray-50 whitespace-pre-wrap p-6 rounded-xl border border-gray-200 overflow-x-auto">
+      <pre className="bg-gray-50 whitespace-pre-wrap break-all wrap-anywhere p-6 rounded-xl border border-gray-200 overflow-x-hidden">
         {JSON.stringify(data, null, 2)}
       </pre>
     );
@@ -33,18 +33,18 @@ export function DocumentContent({ data, showRawJson }: DocumentContentProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 wrap-anywhere">
       {normalizedChunks.map((chunk, chunkIndex) => (
         <section
           key={`${chunk.heading ?? "chunk"}-${chunkIndex}`}
-          className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm space-y-4"
+          className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm space-y-6 wrap-break-word"
         >
           {chunk.heading && (
             <h3 className="text-xl font-semibold text-gray-900">
               {chunk.heading}
             </h3>
           )}
-          <div className="space-y-4">
+          <div className="space-y-5">
             {chunk.content.map((item, elementIndex) => (
               <DocumentElement
                 key={`${item.element_id}-${elementIndex}`}

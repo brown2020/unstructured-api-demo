@@ -19,7 +19,7 @@ export function ClientUploadPanel() {
   } = useFileUpload();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" aria-busy={isLoading}>
       <div
         {...getRootProps()}
         className={`
@@ -32,7 +32,7 @@ export function ClientUploadPanel() {
           ${isDragReject ? "border-red-500 bg-red-50" : ""}
         `}
       >
-        <input {...getInputProps()} />
+        <input {...getInputProps({ "aria-label": "Upload document" })} />
         <div className="space-y-4">
           <div className="text-4xl text-gray-400">📄</div>
           <p className="text-lg text-gray-600">
@@ -49,7 +49,11 @@ export function ClientUploadPanel() {
       </div>
 
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+        <div
+          className="p-4 bg-red-50 border border-red-200 rounded-xl"
+          role="status"
+          aria-live="polite"
+        >
           <p className="text-red-600 flex items-center">
             <span className="mr-2">⚠️</span>
             {error}

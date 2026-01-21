@@ -1,3 +1,5 @@
+import "server-only";
+
 import { UnstructuredClient } from "unstructured-client";
 import { Strategy } from "unstructured-client/sdk/models/shared/index.js";
 import { Element, UnstructuredConfig, ParseError } from "@/types";

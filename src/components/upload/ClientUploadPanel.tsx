@@ -32,7 +32,7 @@ export function ClientUploadPanel() {
           ${isDragReject ? "border-red-500 bg-red-50" : ""}
         `}
       >
-        <input {...getInputProps({ "aria-label": "Upload document" })} />
+        <input {...getInputProps()} aria-label="Upload document" />
         <div className="space-y-4">
           <div className="text-4xl text-gray-400">📄</div>
           <p className="text-lg text-gray-600">

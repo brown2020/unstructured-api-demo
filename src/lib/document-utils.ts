@@ -51,9 +51,9 @@ export function organizeElementsIntoChunks(elements: Element[]): Chunk[] {
 export async function processFileUpload(
   formData: FormData
 ): Promise<{ buffer: ArrayBuffer; filename: string }> {
-  const file = formData.get("file") as File;
+  const file = formData.get("file");
 
-  if (!file) {
+  if (!(file instanceof File)) {
     throw new Error("No file uploaded");
   }
 

@@ -5,12 +5,11 @@ import {
   DropzoneInputProps,
   FileRejection,
 } from "react-dropzone";
-import { Chunk } from "@/types";
+import type { Chunk } from "@/types";
 import { useUploadStore } from "@/stores/upload-store";
 import {
   ACCEPTED_DROPZONE_TYPES,
   MAX_FILE_SIZE_BYTES,
-  validateFileType,
 } from "@/lib/document-utils";
 
 interface UseFileUploadReturn {
@@ -39,20 +38,10 @@ export function useFileUpload(): UseFileUploadReturn {
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
-
-    const file = acceptedFiles[0];
-    if (!validateFileType(file)) {
-      setError("Unsupported file type. Please upload a PDF or image file.");
-      return;
-    }
-
-    if (file.size > MAX_FILE_SIZE_BYTES) {
-      setError("File is too large. Please keep uploads under 10MB.");
-      return;
-    }
-
-    await uploadDocument(file);
-  }, [setError, uploadDocument]);
+    // react-dropzone handles validation via accept and maxSize props
+    // Server-side validation in processFileUpload is the authoritative check
+    await uploadDocument(acceptedFiles[0]);
+  }, [uploadDocument]);
 
   const onDropRejected = useCallback((rejections: FileRejection[]) => {
     const firstError = rejections[0]?.errors[0];

@@ -16,7 +16,6 @@ export async function parseFile(
     const elements = await service.parseDocument(buffer, filename, isHighRes);
     return organizeElementsIntoChunks(elements);
   } catch (error) {
-    console.error("File parsing error:", error);
     throw error instanceof Error
       ? error
       : new Error("An unexpected error occurred while processing the file.");

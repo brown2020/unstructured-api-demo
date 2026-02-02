@@ -1,6 +1,7 @@
 "use client";
 
 import { DocumentContent } from "@/components/DocumentContent";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
 import { useFileUpload } from "@/hooks/useFileUpload";
 
@@ -72,17 +73,16 @@ export function ClientUploadPanel() {
           <div className="flex justify-end">
             <button
               onClick={toggleShowRaw}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
             >
               {showRawJson ? "Show Readable Format" : "Show Raw JSON"}
             </button>
           </div>
-          <DocumentContent data={parsedData} showRawJson={showRawJson} />
+          <ErrorBoundary>
+            <DocumentContent data={parsedData} showRawJson={showRawJson} />
+          </ErrorBoundary>
         </div>
       )}
     </div>
   );
 }
-
-
-

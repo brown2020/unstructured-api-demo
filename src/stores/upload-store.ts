@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import { Chunk } from "@/types";
+import type { Chunk } from "@/types";
 import { parseFile } from "@/actions/parse";
 
 type UploadStatus = "idle" | "uploading" | "ready" | "error";
@@ -17,15 +17,17 @@ interface UploadState {
   reset: () => void;
 }
 
+// Track current upload to prevent race conditions
+let currentUploadId = 0;
+
 export const useUploadStore = create<UploadState>((set, get) => ({
   chunks: null,
   status: "idle",
   errorMessage: null,
   showRawJson: false,
   uploadDocument: async (file, opts) => {
-    if (get().status === "uploading") {
-      return;
-    }
+    // Increment upload ID to invalidate any in-flight requests
+    const uploadId = ++currentUploadId;
 
     set({
       status: "uploading",
@@ -40,6 +42,11 @@ export const useUploadStore = create<UploadState>((set, get) => ({
     try {
       const chunks = await parseFile(formData, opts?.isHighRes ?? false);
 
+      // Check if this upload is still current (not superseded by another)
+      if (uploadId !== currentUploadId) {
+        return;
+      }
+
       if (!chunks?.length) {
         set({
           chunks: null,
@@ -51,6 +58,11 @@ export const useUploadStore = create<UploadState>((set, get) => ({
 
       set({ chunks, status: "ready" });
     } catch (error) {
+      // Check if this upload is still current
+      if (uploadId !== currentUploadId) {
+        return;
+      }
+
       const message =
         error instanceof Error
           ? error.message
@@ -79,4 +91,3 @@ export const useUploadStore = create<UploadState>((set, get) => ({
       showRawJson: false,
     }),
 }));
-

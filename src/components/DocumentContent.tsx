@@ -1,4 +1,5 @@
-import { Chunk } from "@/types";
+import { useMemo } from "react";
+import type { Chunk } from "@/types";
 import { DocumentElement } from "./DocumentElements";
 
 interface DocumentContentProps {
@@ -7,22 +8,25 @@ interface DocumentContentProps {
 }
 
 export function DocumentContent({ data, showRawJson }: DocumentContentProps) {
+  const normalizedChunks = useMemo(() => {
+    if (!data) return [];
+    return data
+      .map((chunk) => ({
+        heading: chunk.heading,
+        content: chunk.content.filter((item) => item.type !== "PageBreak"),
+      }))
+      .filter((chunk) => chunk.content.length > 0);
+  }, [data]);
+
   if (!data) return null;
 
   if (showRawJson) {
     return (
-      <pre className="bg-gray-50 whitespace-pre-wrap break-all wrap-anywhere p-6 rounded-xl border border-gray-200 overflow-x-hidden">
+      <pre className="bg-gray-50 whitespace-pre-wrap break-all p-6 rounded-xl border border-gray-200 overflow-x-hidden" style={{ overflowWrap: "anywhere" }}>
         {JSON.stringify(data, null, 2)}
       </pre>
     );
   }
-
-  const normalizedChunks = data
-    .map((chunk) => ({
-      heading: chunk.heading,
-      content: chunk.content.filter((item) => item.type !== "PageBreak"),
-    }))
-    .filter((chunk) => chunk.content.length > 0);
 
   if (normalizedChunks.length === 0) {
     return (
@@ -33,16 +37,16 @@ export function DocumentContent({ data, showRawJson }: DocumentContentProps) {
   }
 
   return (
-    <div className="space-y-6 wrap-anywhere">
+    <div className="space-y-6" style={{ overflowWrap: "anywhere" }}>
       {normalizedChunks.map((chunk, chunkIndex) => (
         <section
           key={`${chunk.heading ?? "chunk"}-${chunkIndex}`}
-          className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm space-y-6 wrap-break-word"
+          className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm space-y-6 break-words"
         >
           {chunk.heading && (
-            <h3 className="text-xl font-semibold text-gray-900">
+            <h2 className="text-xl font-semibold text-gray-900">
               {chunk.heading}
-            </h3>
+            </h2>
           )}
           <div className="space-y-5">
             {chunk.content.map((item, elementIndex) => (

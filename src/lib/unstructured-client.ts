@@ -43,7 +43,6 @@ export class UnstructuredService {
 
       return this.processResponse(partitionResponse);
     } catch (error) {
-      console.error("Document parsing error:", error);
       throw this.createParseError(error);
     }
   }
@@ -57,8 +56,7 @@ export class UnstructuredService {
         if (Array.isArray(parsedResponse)) {
           parsedElements = parsedResponse as Element[];
         }
-      } catch (e) {
-        console.error("Error parsing response string:", e);
+      } catch {
         throw new Error("Invalid response format from API");
       }
     } else if (Array.isArray(response)) {
@@ -75,14 +73,28 @@ export class UnstructuredService {
   }
 
   private createParseError(error: unknown): ParseError {
-    if (error instanceof Error) {
-      const parseError: ParseError = new Error(error.message);
-      parseError.name = "ParseError";
-      return parseError;
-    }
-    
-    const parseError: ParseError = new Error("An unexpected error occurred while processing the file");
+    const parseError: ParseError = new Error(
+      error instanceof Error
+        ? error.message
+        : "An unexpected error occurred while processing the file"
+    );
     parseError.name = "ParseError";
+
+    // Extract HTTP status code if available from SDK errors
+    if (error && typeof error === "object") {
+      const errorObj = error as Record<string, unknown>;
+      if (typeof errorObj.statusCode === "number") {
+        parseError.statusCode = errorObj.statusCode;
+      } else if (typeof errorObj.status === "number") {
+        parseError.statusCode = errorObj.status;
+      }
+      if (typeof errorObj.body === "string") {
+        parseError.details = errorObj.body;
+      } else if (typeof errorObj.details === "string") {
+        parseError.details = errorObj.details;
+      }
+    }
+
     return parseError;
   }
 }

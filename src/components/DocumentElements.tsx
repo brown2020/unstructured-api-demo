@@ -14,7 +14,7 @@ const elementComponents = {
   Title: ({ element }: DocumentElementProps) => {
     if (!element.text) return null;
     return (
-      <h2 className="text-2xl font-semibold text-gray-900">{element.text}</h2>
+      <h3 className="text-lg font-semibold text-gray-900">{element.text}</h3>
     );
   },
 
@@ -23,11 +23,11 @@ const elementComponents = {
     const lines = getTextLines(element.text);
     if (lines.length === 0) return null;
     return (
-      <div className="space-y-3 wrap-anywhere">
+      <div className="space-y-3 break-words">
         {lines.map((line, index) => (
           <p
             key={`narrative-${index}`}
-            className="text-gray-700 leading-relaxed wrap-break-word"
+            className="text-gray-700 leading-relaxed"
           >
             {line}
           </p>
@@ -43,11 +43,11 @@ const elementComponents = {
     const lines = getTextLines(element.text);
     if (lines.length === 0) return null;
     return (
-      <div className="space-y-2 wrap-anywhere">
+      <div className="space-y-2 break-words">
         {lines.map((line, index) => (
           <p
             key={`uncategorized-${index}`}
-            className="text-gray-500 italic leading-relaxed wrap-break-word"
+            className="text-gray-500 italic leading-relaxed"
           >
             {line}
           </p>

@@ -19,21 +19,22 @@ interface UploadState {
 
 // Track current upload to prevent race conditions
 let currentUploadId = 0;
-
-export const useUploadStore = create<UploadState>((set, get) => ({
+const initialState = {
   chunks: null,
-  status: "idle",
+  status: "idle" as const,
   errorMessage: null,
   showRawJson: false,
+};
+
+export const useUploadStore = create<UploadState>((set) => ({
+  ...initialState,
   uploadDocument: async (file, opts) => {
     // Increment upload ID to invalidate any in-flight requests
     const uploadId = ++currentUploadId;
 
     set({
+      ...initialState,
       status: "uploading",
-      errorMessage: null,
-      chunks: null,
-      showRawJson: false,
     });
 
     const formData = new FormData();
@@ -49,14 +50,13 @@ export const useUploadStore = create<UploadState>((set, get) => ({
 
       if (!chunks?.length) {
         set({
-          chunks: null,
           status: "error",
           errorMessage: "No readable content found.",
         });
         return;
       }
 
-      set({ chunks, status: "ready" });
+      set({ chunks, status: "ready", errorMessage: null });
     } catch (error) {
       // Check if this upload is still current
       if (uploadId !== currentUploadId) {
@@ -83,11 +83,5 @@ export const useUploadStore = create<UploadState>((set, get) => ({
       status: "error",
       errorMessage: message,
     }),
-  reset: () =>
-    set({
-      chunks: null,
-      status: "idle",
-      errorMessage: null,
-      showRawJson: false,
-    }),
+  reset: () => set(initialState),
 }));

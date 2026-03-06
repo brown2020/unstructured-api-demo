@@ -10,20 +10,23 @@ interface DocumentContentProps {
 export function DocumentContent({ data, showRawJson }: DocumentContentProps) {
   const normalizedChunks = useMemo(() => {
     if (!data) return [];
-    return data
-      .map((chunk) => ({
-        heading: chunk.heading,
-        content: chunk.content.filter((item) => item.type !== "PageBreak"),
-      }))
-      .filter((chunk) => chunk.content.length > 0);
+    return data.filter((chunk) => chunk.content.length > 0);
   }, [data]);
+
+  const rawJson = useMemo(() => {
+    if (!showRawJson || !data) {
+      return null;
+    }
+
+    return JSON.stringify(data, null, 2);
+  }, [data, showRawJson]);
 
   if (!data) return null;
 
   if (showRawJson) {
     return (
       <pre className="bg-gray-50 whitespace-pre-wrap break-all p-6 rounded-xl border border-gray-200 overflow-x-hidden" style={{ overflowWrap: "anywhere" }}>
-        {JSON.stringify(data, null, 2)}
+        {rawJson}
       </pre>
     );
   }

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { UnstructuredClient } from "unstructured-client";
+import type { PartitionResponse } from "unstructured-client/sdk/models/operations/index.js";
 import { Strategy } from "unstructured-client/sdk/models/shared/index.js";
 import { Element, UnstructuredConfig, ParseError } from "@/types";
 
@@ -47,29 +48,40 @@ export class UnstructuredService {
     }
   }
 
-  private processResponse(response: unknown): Element[] {
-    let parsedElements: Element[] = [];
+  private processResponse(
+    response: PartitionResponse | { elements?: Element[] }
+  ): Element[] {
+    const parsedResponse =
+      typeof response === "string" ? this.parseJsonResponse(response) : response;
 
-    if (typeof response === "string") {
-      try {
-        const parsedResponse = JSON.parse(response);
-        if (Array.isArray(parsedResponse)) {
-          parsedElements = parsedResponse as Element[];
-        }
-      } catch {
-        throw new Error("Invalid response format from API");
-      }
-    } else if (Array.isArray(response)) {
-      parsedElements = response as Element[];
-    } else {
-      throw new Error("Unexpected response format from API");
-    }
+    const parsedElements = Array.isArray(parsedResponse)
+      ? (parsedResponse as Element[])
+      : this.hasElements(parsedResponse)
+        ? parsedResponse.elements
+        : [];
 
-    if (!parsedElements.length) {
+    if (parsedElements.length === 0) {
       throw new Error("No elements found in the response");
     }
 
     return parsedElements;
+  }
+
+  private parseJsonResponse(response: string): unknown {
+    try {
+      return JSON.parse(response);
+    } catch {
+      throw new Error("Invalid response format from API");
+    }
+  }
+
+  private hasElements(response: unknown): response is { elements: Element[] } {
+    return (
+      typeof response === "object" &&
+      response !== null &&
+      "elements" in response &&
+      Array.isArray(response.elements)
+    );
   }
 
   private createParseError(error: unknown): ParseError {

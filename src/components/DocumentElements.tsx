@@ -10,6 +10,16 @@ const getTextLines = (text: string) =>
     .map((line) => line.trim())
     .filter(Boolean);
 
+const getTableRows = (text: string) => {
+  const rows = text
+    .split(/\r?\n/)
+    .map((row) => row.split("\t").map((cell) => cell.trim()))
+    .filter((cells) => cells.some(Boolean));
+
+  const hasStructuredColumns = rows.some((cells) => cells.length > 1);
+  return hasStructuredColumns ? rows : null;
+};
+
 const elementComponents = {
   Title: ({ element }: DocumentElementProps) => {
     if (!element.text) return null;
@@ -102,13 +112,14 @@ const elementComponents = {
 
   Table: ({ element }: DocumentElementProps) => {
     if (!element.text) return null;
-    const rows = element.text
-      .split("\n")
-      .map((row) => row.split("\t"))
-      .filter((cells) => cells.length > 0);
+    const rows = getTableRows(element.text);
 
-    if (rows.length === 0) {
-      return null;
+    if (!rows) {
+      return (
+        <pre className="bg-gray-50 whitespace-pre-wrap rounded-lg border border-gray-200 p-4 text-sm text-gray-700">
+          {element.text}
+        </pre>
+      );
     }
 
     return (
@@ -120,9 +131,9 @@ const elementComponents = {
                 {cells.map((cell, cellIndex) => (
                   <td
                     key={`cell-${rowIndex}-${cellIndex}`}
-                    className="px-3 py-2 whitespace-nowrap text-gray-700"
+                    className="px-3 py-2 align-top text-gray-700"
                   >
-                    {cell || "\u00A0"}
+                    {cell}
                   </td>
                 ))}
               </tr>

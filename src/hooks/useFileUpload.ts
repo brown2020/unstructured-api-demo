@@ -5,6 +5,7 @@ import {
   DropzoneInputProps,
   FileRejection,
 } from "react-dropzone";
+import { useShallow } from "zustand/react/shallow";
 import type { Chunk } from "@/types";
 import { useUploadStore } from "@/stores/upload-store";
 import {
@@ -27,14 +28,27 @@ interface UseFileUploadReturn {
 }
 
 export function useFileUpload(): UseFileUploadReturn {
-  const parsedData = useUploadStore((state) => state.chunks);
-  const status = useUploadStore((state) => state.status);
-  const error = useUploadStore((state) => state.errorMessage);
-  const showRawJson = useUploadStore((state) => state.showRawJson);
-  const toggleShowRaw = useUploadStore((state) => state.toggleShowRaw);
-  const uploadDocument = useUploadStore((state) => state.uploadDocument);
-  const reset = useUploadStore((state) => state.reset);
-  const setError = useUploadStore((state) => state.setError);
+  const {
+    parsedData,
+    status,
+    error,
+    showRawJson,
+    toggleShowRaw,
+    uploadDocument,
+    reset,
+    setError,
+  } = useUploadStore(
+    useShallow((state) => ({
+      parsedData: state.chunks,
+      status: state.status,
+      error: state.errorMessage,
+      showRawJson: state.showRawJson,
+      toggleShowRaw: state.toggleShowRaw,
+      uploadDocument: state.uploadDocument,
+      reset: state.reset,
+      setError: state.setError,
+    }))
+  );
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
@@ -75,6 +89,7 @@ export function useFileUpload(): UseFileUploadReturn {
     multiple: false,
     maxSize: MAX_FILE_SIZE_BYTES,
     accept: ACCEPTED_DROPZONE_TYPES,
+    disabled: status === "uploading",
   });
 
   return {

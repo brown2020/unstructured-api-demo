@@ -1,6 +1,6 @@
 import { Element, Chunk } from "@/types";
 
-const HEADING_TYPES = new Set<Element["type"]>(["Heading", "Header", "Title"]);
+const HEADING_TYPES = new Set<Element["type"]>(["Heading", "Title"]);
 export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 export const ACCEPTED_FILE_TYPES = [
   "application/pdf",
@@ -8,6 +8,7 @@ export const ACCEPTED_FILE_TYPES = [
   "image/jpeg",
   "image/jpg",
 ] as const;
+const ACCEPTED_FILE_EXTENSIONS = [".pdf", ".png", ".jpg", ".jpeg"] as const;
 
 export const ACCEPTED_DROPZONE_TYPES: Record<string, string[]> = {
   "application/pdf": [".pdf"],
@@ -30,7 +31,7 @@ export function organizeElementsIntoChunks(elements: Element[]): Chunk[] {
   for (const element of elements) {
     if (HEADING_TYPES.has(element.type)) {
       pushChunk();
-      currentHeading = element.text || null;
+      currentHeading = element.text?.trim() || null;
       continue;
     }
 
@@ -70,5 +71,21 @@ export async function processFileUpload(
 }
 
 export function validateFileType(file: File): boolean {
-  return ACCEPTED_FILE_TYPES.includes(file.type as (typeof ACCEPTED_FILE_TYPES)[number]);
+  if (
+    ACCEPTED_FILE_TYPES.includes(
+      file.type as (typeof ACCEPTED_FILE_TYPES)[number]
+    )
+  ) {
+    return true;
+  }
+
+  const extension = getFileExtension(file.name);
+  return ACCEPTED_FILE_EXTENSIONS.includes(
+    extension as (typeof ACCEPTED_FILE_EXTENSIONS)[number]
+  );
+}
+
+function getFileExtension(filename: string): string {
+  const extension = filename.split(".").pop();
+  return extension ? `.${extension.toLowerCase()}` : "";
 }

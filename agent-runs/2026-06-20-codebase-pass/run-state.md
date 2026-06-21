@@ -11,23 +11,21 @@
 
 ## Current State
 
-- Phase: Package and Dead-Code Cleanup
-- Task: T-005
+- Phase: Review
+- Task: T-006
 - Status: In progress
-- Last command: `npm run build`
-- Last result: Passed after safe dependency updates
-- Last pushed commit: `fccef99c6c15eeeb8c46d2dc8fa4e97a4a024a51`
+- Last command: `npm outdated --long`
+- Last result: Only `@types/node` major 26.0.0 remains beyond wanted 25.9.4; deferred
+- Last pushed commit: `ecbee395f60183203785fb1f8d20b20bc9bb67d5`
 - Branch sync: local `dev` matches `origin/dev`
-- Working tree: package-lock, README, and package cleanup report are dirty
-- Next action: Run final package cleanup diff checks, commit, and push
+- Working tree: review report and ledger updates are dirty
+- Next action: Commit/push review report, then run stabilization loop
 
 ## Dirty File Classification
 
 | Path | Classification | Owner/Reason |
 | --- | --- | --- |
-| `package-lock.json` | In-scope package cleanup | F-001 safe non-force dependency updates |
-| `README.md` | In-scope documentation | Package inventory reflects updated lockfile |
-| `agent-runs/2026-06-20-codebase-pass/05-package-and-dead-code-cleanup.md` | Safe-to-commit | Package cleanup phase report |
+| `agent-runs/2026-06-20-codebase-pass/06-review.md` | Safe-to-commit | Review phase report |
 | `agent-runs/2026-06-20-codebase-pass/run-state.md` | Safe-to-commit | Resume ledger update |
 | `agent-runs/2026-06-20-codebase-pass/task-queue.md` | Safe-to-commit | Task state update |
 

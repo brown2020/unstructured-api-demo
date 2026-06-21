@@ -11,21 +11,21 @@
 
 ## Current State
 
-- Phase: Review
+- Phase: Stabilization Loop
 - Task: T-006
 - Status: In progress
 - Last command: `npm outdated --long`
 - Last result: Only `@types/node` major 26.0.0 remains beyond wanted 25.9.4; deferred
-- Last pushed commit: `ecbee395f60183203785fb1f8d20b20bc9bb67d5`
+- Last pushed commit: `b31ddee436a250ae3daf7e4d5a89a6faf49c0d1f`
 - Branch sync: local `dev` matches `origin/dev`
-- Working tree: review report and ledger updates are dirty
-- Next action: Commit/push review report, then run stabilization loop
+- Working tree: stabilization report and ledger updates are dirty
+- Next action: Commit/push stabilization report, then run final integration
 
 ## Dirty File Classification
 
 | Path | Classification | Owner/Reason |
 | --- | --- | --- |
-| `agent-runs/2026-06-20-codebase-pass/06-review.md` | Safe-to-commit | Review phase report |
+| `agent-runs/2026-06-20-codebase-pass/07-stabilization-loop.md` | Safe-to-commit | Stabilization phase report |
 | `agent-runs/2026-06-20-codebase-pass/run-state.md` | Safe-to-commit | Resume ledger update |
 | `agent-runs/2026-06-20-codebase-pass/task-queue.md` | Safe-to-commit | Task state update |
 

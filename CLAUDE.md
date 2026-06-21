@@ -67,7 +67,7 @@ Zustand store (`upload-store.ts`) manages:
 - Constants in `lib/document-utils.ts`: `ACCEPTED_FILE_TYPES`, `MAX_FILE_SIZE_BYTES`
 
 ### Document Chunking
-Elements are organized into chunks by heading types (Title, Header, Heading) and PageBreak markers. See `organizeElementsIntoChunks()` in `lib/document-utils.ts`.
+Elements are organized into chunks by `Title` and `Heading` elements plus `PageBreak` markers. `Header` elements are rendered as content. See `organizeElementsIntoChunks()` in `lib/document-utils.ts`.
 
 ## Environment Variables
 

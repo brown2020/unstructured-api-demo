@@ -11,21 +11,24 @@
 
 ## Current State
 
-- Phase: Findings Backlog
-- Task: T-003
-- Status: In progress
-- Last command: `rg -n "next\\.svg|vercel\\.svg|/next|/vercel|LICENSE|Header" -g '!node_modules' -g '!agent-runs' .`
-- Last result: Found unused default public SVG assets, missing `LICENSE` target referenced by README, and stale CLAUDE.md chunking guidance
-- Last pushed commit: `3b69b563d0e654118e9ceead699bed5cc02f5285`
+- Phase: Execute Fixes and Improvements
+- Task: T-004
+- Status: Completed
+- Last command: `npm run build`
+- Last result: Passed after F-002/F-003 cleanup
+- Last pushed commit: `3c2b307913b2c4f0c66df1ebba569f894de6b8be`
 - Branch sync: local `dev` matches `origin/dev`
-- Working tree: only findings run-report updates are dirty
-- Next action: Commit and push findings backlog, then execute highest-confidence fixes
+- Working tree: F-002/F-003 cleanup files and execution report are dirty
+- Next action: Inspect diff, commit/push execution checkpoint, then start package cleanup
 
 ## Dirty File Classification
 
 | Path | Classification | Owner/Reason |
 | --- | --- | --- |
-| `agent-runs/2026-06-20-codebase-pass/03-findings-backlog.md` | Safe-to-commit | Findings backlog report |
+| `CLAUDE.md` | In-scope source/docs | F-003 stale chunking guidance |
+| `public/next.svg` | In-scope dead code | F-002 unreferenced starter asset |
+| `public/vercel.svg` | In-scope dead code | F-002 unreferenced starter asset |
+| `agent-runs/2026-06-20-codebase-pass/04-execute-fixes-and-improvements.md` | Safe-to-commit | Execution phase report |
 | `agent-runs/2026-06-20-codebase-pass/run-state.md` | Safe-to-commit | Resume ledger update |
 | `agent-runs/2026-06-20-codebase-pass/task-queue.md` | Safe-to-commit | Task state update |
 

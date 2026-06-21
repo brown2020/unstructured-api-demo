@@ -11,24 +11,23 @@
 
 ## Current State
 
-- Phase: Execute Fixes and Improvements
-- Task: T-004
-- Status: Completed
+- Phase: Package and Dead-Code Cleanup
+- Task: T-005
+- Status: In progress
 - Last command: `npm run build`
-- Last result: Passed after F-002/F-003 cleanup
-- Last pushed commit: `3c2b307913b2c4f0c66df1ebba569f894de6b8be`
+- Last result: Passed after safe dependency updates
+- Last pushed commit: `fccef99c6c15eeeb8c46d2dc8fa4e97a4a024a51`
 - Branch sync: local `dev` matches `origin/dev`
-- Working tree: F-002/F-003 cleanup files and execution report are dirty
-- Next action: Inspect diff, commit/push execution checkpoint, then start package cleanup
+- Working tree: package-lock, README, and package cleanup report are dirty
+- Next action: Run final package cleanup diff checks, commit, and push
 
 ## Dirty File Classification
 
 | Path | Classification | Owner/Reason |
 | --- | --- | --- |
-| `CLAUDE.md` | In-scope source/docs | F-003 stale chunking guidance |
-| `public/next.svg` | In-scope dead code | F-002 unreferenced starter asset |
-| `public/vercel.svg` | In-scope dead code | F-002 unreferenced starter asset |
-| `agent-runs/2026-06-20-codebase-pass/04-execute-fixes-and-improvements.md` | Safe-to-commit | Execution phase report |
+| `package-lock.json` | In-scope package cleanup | F-001 safe non-force dependency updates |
+| `README.md` | In-scope documentation | Package inventory reflects updated lockfile |
+| `agent-runs/2026-06-20-codebase-pass/05-package-and-dead-code-cleanup.md` | Safe-to-commit | Package cleanup phase report |
 | `agent-runs/2026-06-20-codebase-pass/run-state.md` | Safe-to-commit | Resume ledger update |
 | `agent-runs/2026-06-20-codebase-pass/task-queue.md` | Safe-to-commit | Task state update |
 
@@ -38,6 +37,6 @@
 
 ## Deferred Items
 
-- F-001 package audit reports 9 vulnerabilities; handle in Package and Dead-Code Cleanup phase.
+- F-001 package audit reduced from 9 to 4 vulnerabilities; remaining advisories require force/breaking changes and are deferred.
 - F-004 README references a missing `LICENSE`; defer because license/legal content needs owner confirmation.
 - F-005 no automated test script exists; defer unless a focused test setup is approved or naturally introduced by a fix.

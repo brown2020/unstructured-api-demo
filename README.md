@@ -5,7 +5,7 @@ Modern document-parsing demo that showcases how to stream PDFs and images throug
 <p align="center">
   <a href="https://nextjs.org/"><img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-black" /></a>
   <a href="https://www.typescriptlang.org/"><img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-6.0-3178C6" /></a>
-  <a href="https://tailwindcss.com/"><img alt="Tailwind" src="https://img.shields.io/badge/Tailwind-4.2-06B6D4" /></a>
+  <a href="https://tailwindcss.com/"><img alt="Tailwind" src="https://img.shields.io/badge/Tailwind-4.3-06B6D4" /></a>
   <a href="./LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow" /></a>
 </p>
 
@@ -55,21 +55,21 @@ The stack below mirrors the `package-lock.json` and reflects every top-level dep
 
 | Package | Version | Purpose |
 | --- | --- | --- |
-| `next` | ^16.2.4 | App Router, server actions, RSC |
-| `react`, `react-dom` | ^19.2.5 | UI runtime |
+| `next` | 16.2.9 | App Router, server actions, RSC |
+| `react`, `react-dom` | 19.2.7 | UI runtime |
 | `react-dropzone` | ^15.0.0 | Accessible drag-and-drop uploads |
 | `unstructured-client` | ^0.31.0 | Official SDK for Unstructured API |
-| `zustand` | ^5.0.12 | Lightweight upload store |
+| `zustand` | 5.0.14 | Lightweight upload store |
 
 ### Dev / Build Tooling
 
 | Package | Version | Purpose |
 | --- | --- | --- |
-| `tailwindcss`, `@tailwindcss/postcss` | ^4.2.2 | Styling via Tailwind v4 pipeline |
-| `postcss` | ^8.5.10 | CSS transforms |
+| `tailwindcss`, `@tailwindcss/postcss` | 4.3.1 | Styling via Tailwind v4 pipeline |
+| `postcss` | 8.5.15 | CSS transforms |
 | `typescript` | ^6.0.3 | Type safety |
-| `eslint`, `eslint-config-next` | ^10.2.1 / ^16.2.4 | Linting |
-| `@types/node`, `@types/react`, `@types/react-dom` | ^25.6.0 / ^19.2.14 / ^19.2.3 | Type defs for Node/React |
+| `eslint`, `eslint-config-next` | 10.5.0 / 16.2.9 | Linting |
+| `@types/node`, `@types/react`, `@types/react-dom` | 25.9.4 / 19.2.17 / 19.2.3 | Type defs for Node/React |
 
 ---
 

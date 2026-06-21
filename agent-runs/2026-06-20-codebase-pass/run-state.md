@@ -11,24 +11,23 @@
 
 ## Current State
 
-- Phase: Preflight and Repo Docs
-- Task: T-001
+- Phase: Baseline Validation
+- Task: T-002
 - Status: In progress
-- Last command: `npm run lint`
-- Last result: Passed after `npm ci` refreshed missing installed dependencies from `package-lock.json`
-- Last pushed commit: `6f6fd6c07d91848b7724156d6a2fdb5abe0769bd`
-- Branch sync: local `dev` matched `origin/dev` before run-report edits
-- Working tree: only codebase-improvement run reports and docs are dirty
-- Next action: Inspect diff, stage docs/run-report files, commit, dry-run push, push
+- Last command: `npm audit --audit-level=low`
+- Last result: Failed with 9 known dependency advisories; lint and build passed
+- Last pushed commit: `5e2f4bbb5b0751e1e3c2e767b1872f8bf7677a52`
+- Branch sync: local `dev` matches `origin/dev`
+- Working tree: only baseline run-report updates are dirty
+- Next action: Commit and push baseline report, then build findings backlog
 
 ## Dirty File Classification
 
 | Path | Classification | Owner/Reason |
 | --- | --- | --- |
-| `agent-runs/2026-06-20-codebase-pass/*` | Safe-to-commit | Current `$sb-cbi` run reports |
-| `AGENTS.md` | Safe-to-commit | Repo guidance doc required by Docs Sweep Loop |
-| `SPEC.md` | Safe-to-commit | Current-state spec required by Docs Sweep Loop |
-| `README.md` | Safe-to-commit | Package inventory corrected from `package.json` evidence |
+| `agent-runs/2026-06-20-codebase-pass/02-baseline-validation.md` | Safe-to-commit | Baseline validation report |
+| `agent-runs/2026-06-20-codebase-pass/run-state.md` | Safe-to-commit | Resume ledger update |
+| `agent-runs/2026-06-20-codebase-pass/task-queue.md` | Safe-to-commit | Task state update |
 
 ## Blockers
 

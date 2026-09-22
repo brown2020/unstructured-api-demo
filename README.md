@@ -96,7 +96,9 @@ cp .env.example .env.local
 npm run dev        # Start Next.js in development mode
 npm run build      # Create an optimized production build
 npm run start      # Serve the production build
-npm run lint       # Run ESLint (Next.js 16 CLI)
+npm run lint       # Run ESLint
+npm run typecheck  # TypeScript --noEmit
+npm test           # Vitest (fixtures; no paid Unstructured calls)
 ```
 
 > **Heads-up:** Next.js 16 currently treats `next lint` script names as project directories. If you encounter “Invalid project directory …/lint”, run `npx next lint` directly as a workaround until the upstream bug is fixed.
@@ -110,6 +112,9 @@ Create `.env.local` with the following keys:
 ```env
 UNSTRUCTURED_API_KEY=your_api_key
 UNSTRUCTURED_API_URL=https://api.unstructured.io/general/v0/general
+
+# Optional — CI / app-eval fixtures (no live Unstructured calls)
+# UNSTRUCTURED_USE_FIXTURES=true
 ```
 
 Optional tweaks:

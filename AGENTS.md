@@ -34,3 +34,10 @@ Keep the dependency direction boring: UI and hooks may use store/actions/utiliti
 - Treat `UNSTRUCTURED_API_KEY` and `UNSTRUCTURED_API_URL` as required runtime configuration for real parsing.
 - Prefer focused changes with lint/build verification over broad refactors.
 - Run reports from `$sb-cbi` live under `agent-runs/` and should be committed only as workflow artifacts.
+
+## Fixtures / CI
+
+- Set `UNSTRUCTURED_USE_FIXTURES=true` for local/CI proofs without burning Unstructured credits.
+- Fixture short-circuit runs **after** upload validation so denial tests stay honest.
+- Never commit `UNSTRUCTURED_API_KEY` or inline secrets in `.github/workflows/*` — use `${{ secrets.* }}` only when a non-gate job needs them.
+- GitHub Actions gate job must tolerate missing secrets (fixtures + deferred SDK init).

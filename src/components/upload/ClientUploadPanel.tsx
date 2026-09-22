@@ -35,10 +35,11 @@ export function ClientUploadPanel() {
         {...getRootProps()}
         className={dropzoneClassName}
         aria-disabled={isDisabled}
+        aria-label="Upload document dropzone. Accepts PDF, PNG, and JPEG under 10MB."
       >
         <input {...getInputProps()} aria-label="Upload document" />
         <div className="space-y-4">
-          <div className="text-4xl text-gray-400">📄</div>
+          <div className="text-4xl text-gray-500" aria-hidden="true">📄</div>
           <p className="text-lg text-gray-600">
             {isLoading
               ? "Parsing your document..."
@@ -48,7 +49,7 @@ export function ClientUploadPanel() {
                 ? "Sorry, this file type is not supported 😕"
                 : "Drag & drop your document here, or click to browse"}
           </p>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-600">
             Supports PDF, PNG, and JPEG files under 10MB
           </p>
         </div>
@@ -57,19 +58,22 @@ export function ClientUploadPanel() {
       {error && (
         <div
           className="p-4 bg-red-50 border border-red-200 rounded-xl"
-          role="status"
-          aria-live="polite"
+          role="alert"
+          aria-live="assertive"
         >
           <p className="text-red-600 flex items-center">
-            <span className="mr-2">⚠️</span>
+            <span className="mr-2" aria-hidden="true">
+              ⚠️
+            </span>
             {error}
           </p>
         </div>
       )}
 
       {isLoading && (
-        <div>
+        <div role="status" aria-live="polite" aria-label="Parsing document">
           <LoadingSkeleton />
+          <span className="sr-only">Parsing your document…</span>
         </div>
       )}
 

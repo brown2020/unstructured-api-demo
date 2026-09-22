@@ -20,6 +20,11 @@ const getTableRows = (text: string) => {
   return hasStructuredColumns ? rows : null;
 };
 
+function lineKey(elementId: string, line: string): string {
+  // Stable key from element id + line content (not array index)
+  return `${elementId}:${line.slice(0, 64)}`;
+}
+
 const elementComponents = {
   Title: ({ element }: DocumentElementProps) => {
     if (!element.text) return null;
@@ -34,9 +39,9 @@ const elementComponents = {
     if (lines.length === 0) return null;
     return (
       <div className="space-y-3 break-words">
-        {lines.map((line, index) => (
+        {lines.map((line) => (
           <p
-            key={`narrative-${index}`}
+            key={lineKey(element.element_id, line)}
             className="text-gray-700 leading-relaxed"
           >
             {line}
@@ -54,10 +59,10 @@ const elementComponents = {
     if (lines.length === 0) return null;
     return (
       <div className="space-y-2 break-words">
-        {lines.map((line, index) => (
+        {lines.map((line) => (
           <p
-            key={`uncategorized-${index}`}
-            className="text-gray-500 italic leading-relaxed"
+            key={lineKey(element.element_id, line)}
+            className="text-gray-600 italic leading-relaxed"
           >
             {line}
           </p>
@@ -89,7 +94,7 @@ const elementComponents = {
     return (
       <a
         href={`mailto:${element.text}`}
-        className="text-blue-600 hover:text-blue-500 underline decoration-dotted"
+        className="text-blue-800 hover:text-blue-700 underline decoration-dotted"
       >
         {element.text}
       </a>
@@ -98,7 +103,7 @@ const elementComponents = {
 
   PageNumber: ({ element }: DocumentElementProps) => {
     if (!element.text) return null;
-    return <div className="text-sm text-gray-400">Page {element.text}</div>;
+    return <div className="text-sm text-gray-600">Page {element.text}</div>;
   },
 
   Image: ({ element }: DocumentElementProps) => (
@@ -126,31 +131,33 @@ const elementComponents = {
       <div className="overflow-x-auto rounded-lg border border-gray-200">
         <table className="min-w-full divide-y divide-gray-200 text-sm">
           <tbody className="divide-y divide-gray-100">
-            {rows.map((cells, rowIndex) => (
-              <tr key={`row-${rowIndex}`}>
-                {cells.map((cell, cellIndex) => (
-                  <td
-                    key={`cell-${rowIndex}-${cellIndex}`}
-                    className="px-3 py-2 align-top text-gray-700"
-                  >
-                    {cell}
-                  </td>
-                ))}
-              </tr>
-            ))}
+            {rows.map((cells) => {
+              const rowKey = `${element.element_id}:row:${cells.join("|").slice(0, 80)}`;
+              return (
+                <tr key={rowKey}>
+                  {cells.map((cell) => (
+                    <td
+                      key={`${rowKey}:cell:${cell.slice(0, 40)}`}
+                      className="px-3 py-2 align-top text-gray-700"
+                    >
+                      {cell}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
     );
   },
 
-  Default: ({ element }: DocumentElementProps) => (
+  Default: ({ element }: DocumentElementProps) =>
     element.text ? (
       <div className="text-gray-700">
         <span className="font-medium">{element.type}:</span> {element.text}
       </div>
-    ) : null
-  ),
+    ) : null,
 };
 
 export function DocumentElement({ element }: DocumentElementProps) {

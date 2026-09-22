@@ -5,14 +5,17 @@ import type { PartitionResponse } from "unstructured-client/sdk/models/operation
 import { Strategy } from "unstructured-client/sdk/models/shared/index.js";
 import { Element, UnstructuredConfig, ParseError } from "@/types";
 
+/**
+ * Deferred Unstructured SDK wrapper.
+ * The Speakeasy client is constructed on first parseDocument call so empty-env
+ * CI / SSG never initializes the SDK at module import time.
+ */
 export class UnstructuredService {
-  private client: UnstructuredClient;
+  private client: UnstructuredClient | null = null;
+  private readonly config: UnstructuredConfig;
 
   constructor(config: UnstructuredConfig) {
-    this.client = new UnstructuredClient({
-      security: { apiKeyAuth: config.apiKey },
-      serverURL: config.apiURL,
-    });
+    this.config = config;
   }
 
   static getConfig(): UnstructuredConfig {
@@ -26,13 +29,23 @@ export class UnstructuredService {
     return { apiKey, apiURL };
   }
 
+  private getClient(): UnstructuredClient {
+    if (!this.client) {
+      this.client = new UnstructuredClient({
+        security: { apiKeyAuth: this.config.apiKey },
+        serverURL: this.config.apiURL,
+      });
+    }
+    return this.client;
+  }
+
   async parseDocument(
     buffer: ArrayBuffer,
     filename: string,
     isHighRes: boolean = false
   ): Promise<Element[]> {
     try {
-      const partitionResponse = await this.client.general.partition({
+      const partitionResponse = await this.getClient().general.partition({
         partitionParameters: {
           files: {
             content: buffer,
@@ -92,7 +105,6 @@ export class UnstructuredService {
     );
     parseError.name = "ParseError";
 
-    // Extract HTTP status code if available from SDK errors
     if (error && typeof error === "object") {
       const errorObj = error as Record<string, unknown>;
       if (typeof errorObj.statusCode === "number") {

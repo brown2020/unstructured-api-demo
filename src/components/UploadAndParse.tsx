@@ -4,7 +4,7 @@ export function UploadAndParse() {
   return (
     <section className="max-w-5xl mx-auto px-4 py-8 space-y-10">
       <header className="space-y-3 text-center">
-        <p className="text-xs uppercase tracking-[0.3em] text-blue-600">
+        <p className="text-sm uppercase tracking-[0.2em] text-blue-800 font-medium">
           Unstructured API Demo
         </p>
         <h1 className="text-3xl md:text-4xl font-semibold text-gray-900">

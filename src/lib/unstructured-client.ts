@@ -4,11 +4,18 @@ import { UnstructuredClient } from "unstructured-client";
 import type { PartitionResponse } from "unstructured-client/sdk/models/operations/index.js";
 import { Strategy } from "unstructured-client/sdk/models/shared/index.js";
 import { Element, UnstructuredConfig, ParseError } from "@/types";
+import { toFriendlyParseError } from "@/lib/parse-errors";
 
 /**
  * Deferred Unstructured SDK wrapper.
  * The Speakeasy client is constructed on first parseDocument call so empty-env
  * CI / SSG never initializes the SDK at module import time.
+ *
+ * Multi-page PDFs: unstructured-client defaults splitPdfPage=true, which fans
+ * out parallel per-page requests via SplitPdfHook. Failures surface as
+ * "Unexpected HTTP client error: Error: Failed to send request for page N"
+ * plus SDK console.error overlays. We send the whole file in one partition
+ * call (splitPdfPage: false) so multi-page docs work through the API.
  */
 export class UnstructuredService {
   private client: UnstructuredClient | null = null;
@@ -23,7 +30,9 @@ export class UnstructuredService {
     const apiURL = process.env.UNSTRUCTURED_API_URL;
 
     if (!apiKey || !apiURL) {
-      throw new Error("Missing Unstructured API configuration");
+      throw new Error(
+        "Missing Unstructured API configuration. Set UNSTRUCTURED_API_KEY and UNSTRUCTURED_API_URL."
+      );
     }
 
     return { apiKey, apiURL };
@@ -52,6 +61,10 @@ export class UnstructuredService {
             fileName: filename,
           },
           strategy: isHighRes ? Strategy.HiRes : Strategy.Auto,
+          // Disable SplitPdfHook parallel page requests (page-2 failure root cause).
+          splitPdfPage: false,
+          // Soft-fail if a future default re-enables splitting.
+          splitPdfAllowFailed: true,
         },
       });
 
@@ -98,27 +111,6 @@ export class UnstructuredService {
   }
 
   private createParseError(error: unknown): ParseError {
-    const parseError: ParseError = new Error(
-      error instanceof Error
-        ? error.message
-        : "An unexpected error occurred while processing the file"
-    );
-    parseError.name = "ParseError";
-
-    if (error && typeof error === "object") {
-      const errorObj = error as Record<string, unknown>;
-      if (typeof errorObj.statusCode === "number") {
-        parseError.statusCode = errorObj.statusCode;
-      } else if (typeof errorObj.status === "number") {
-        parseError.statusCode = errorObj.status;
-      }
-      if (typeof errorObj.body === "string") {
-        parseError.details = errorObj.body;
-      } else if (typeof errorObj.details === "string") {
-        parseError.details = errorObj.details;
-      }
-    }
-
-    return parseError;
+    return toFriendlyParseError(error) as ParseError;
   }
 }

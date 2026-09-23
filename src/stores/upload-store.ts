@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import type { Chunk } from "@/types";
 import { parseFile } from "@/actions/parse";
+import { friendlyParseMessage } from "@/lib/parse-errors";
 
 type UploadStatus = "idle" | "uploading" | "ready" | "error";
 
@@ -63,14 +64,10 @@ export const useUploadStore = create<UploadState>((set) => ({
         return;
       }
 
-      const message =
-        error instanceof Error
-          ? error.message
-          : "An unexpected error occurred while parsing the file.";
-
+      // Soft-catch network/SDK failures — UI banner only, never console.error(Error)
       set({
         status: "error",
-        errorMessage: message,
+        errorMessage: friendlyParseMessage(error),
       });
     }
   },

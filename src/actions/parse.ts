@@ -10,11 +10,15 @@ import {
   fixtureChunks,
   unstructuredFixturesEnabled,
 } from "@/lib/unstructured-fixtures";
+import { toFriendlyParseError } from "@/lib/parse-errors";
 
 /**
  * Server Action: validate upload, then partition via Unstructured (or fixtures).
  * Validation always runs before the fixture short-circuit so denial proofs stay honest.
  * API keys never leave the server; fixtures avoid burning paid credits in CI / app-eval.
+ *
+ * Network / SDK failures are mapped to friendly ParseErrors (no opaque
+ * "Unexpected HTTP client error: Failed to send request for page N").
  */
 export async function parseFile(
   formData: FormData,
@@ -33,8 +37,7 @@ export async function parseFile(
     const elements = await service.parseDocument(buffer, filename, isHighRes);
     return organizeElementsIntoChunks(elements);
   } catch (error) {
-    throw error instanceof Error
-      ? error
-      : new Error("An unexpected error occurred while processing the file.");
+    // Soft-catch: always surface a friendly Error (never raw SDK / network objects)
+    throw toFriendlyParseError(error);
   }
 }

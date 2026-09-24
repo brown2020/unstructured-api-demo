@@ -121,4 +121,4 @@ Deploy to Vercel or any Node host that supports Next.js. Set `UNSTRUCTURED_API_K
 
 ## License
 
-No `LICENSE` file is present in this repository.
+[GNU Affero General Public License v3.0](LICENSE.md) (AGPL-3.0).

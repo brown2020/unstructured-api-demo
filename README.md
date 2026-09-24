@@ -1,177 +1,124 @@
 # Unstructured API Demo
 
-Modern document-parsing demo that showcases how to stream PDFs and images through [Unstructured.io](https://unstructured.io) using **Next.js 16**, **React 19**, and **TypeScript**. The UI runs primarily as server components, while a small upload client island handles drag-and-drop, Zustand-powered state, and raw JSON inspection.
-
-<p align="center">
-  <a href="https://nextjs.org/"><img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-black" /></a>
-  <a href="https://www.typescriptlang.org/"><img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-6.0-3178C6" /></a>
-  <a href="https://tailwindcss.com/"><img alt="Tailwind" src="https://img.shields.io/badge/Tailwind-4.3-06B6D4" /></a>
-  <a href="./LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow" /></a>
-</p>
-
----
-
-## Table of Contents
-
-1. [Features](#features)
-2. [Architecture](#architecture)
-3. [Package Inventory](#package-inventory)
-4. [Getting Started](#getting-started)
-5. [Environment Variables](#environment-variables)
-6. [Development Scripts](#development-scripts)
-7. [Project Structure](#project-structure)
-8. [Contributing](#contributing)
-9. [License](#license)
-
----
+A Next.js demo for [Unstructured.io](https://unstructured.io): drag-and-drop a PDF or image, parse it on the server with the Unstructured SDK, and inspect either a readable chunk view or the raw JSON element list.
 
 ## Features
 
-- **Drag-and-drop uploads** powered by `react-dropzone`, limited to PDFs and images under 10 MB.
-- **Server Actions pipeline** that streams the file buffer directly to `unstructured-client` using the Hi-Res strategy toggle.
-- **Smart chunk rendering**: headings, tables, images, footers, and email addresses are normalized and rendered with semantic UI primitives.
-- **Zustand store** for upload state (loading, errors, raw JSON toggle) to keep the client bundle small and predictable.
-- **Tailwind CSS v4** design system with responsive typography and subtle motion for dropzone states.
+- **Drag-and-drop upload** — `react-dropzone` client island; single file; PDF / PNG / JPEG
+- **10 MB server + client limit** — validated in `document-utils` and the upload UI
+- **Server Action parsing** — `parseFile` sends the buffer through `unstructured-client`
+- **Chunked rendering** — elements grouped by titles/headings and page breaks; type-aware display
+- **Raw JSON toggle** — inspect the structured response alongside the readable view
+- **Error handling** — validation and API failures surface without crashing the page (`ErrorBoundary` + store errors)
+- **Fixture mode** — `UNSTRUCTURED_USE_FIXTURES=true` short-circuits live API calls for CI / local demos
 
----
+No authentication, Firebase, Stripe, or AI providers in this repo.
 
-## Architecture
+## Tech stack
 
-| Layer | Responsibilities | Key files |
-| --- | --- | --- |
-| **App Router (RSC)** | Layout, metadata, hero copy | `src/app/layout.tsx`, `src/components/UploadAndParse.tsx` |
-| **Client Upload Island** | Drag-and-drop, progress UI, raw JSON toggle | `src/components/upload/ClientUploadPanel.tsx`, `src/hooks/useFileUpload.ts` |
-| **Zustand Store** | Atomic upload state, server action orchestration | `src/stores/upload-store.ts` |
-| **Server Actions** | File validation, parsing via Unstructured | `src/actions/parse.ts`, `src/lib/document-utils.ts`, `src/lib/unstructured-client.ts` |
-| **Rendering** | Typed document elements & chunk layout | `src/components/DocumentContent.tsx`, `src/components/DocumentElements.tsx`, `src/types/index.ts` |
+| Layer | Choice |
+| --- | --- |
+| Framework | Next.js `^16.3.6` (App Router) |
+| UI | React `^19.3.0`, Tailwind CSS `^4.3.3`, react-dropzone `^15` |
+| Language | TypeScript `^6` |
+| Parsing | `unstructured-client` `^0.31` |
+| State | Zustand `^5` |
+| Tests | Vitest `^5` |
+| Lint | ESLint `^10` + `eslint-config-next` |
+| Node | `>=20.9.0` (CI uses 22) |
 
----
+## Project structure
 
-## Package Inventory
+```
+src/
+  app/                 # /, layout, not-found
+  actions/parse.ts     # Server Action entry
+  components/          # UploadAndParse, document views, upload panel, error/loading UI
+  hooks/useFileUpload.ts
+  stores/upload-store.ts
+  lib/                 # UnstructuredService, fixtures, validation/chunking, errors
+  types/
+.env.example
+.github/workflows/ci.yml
+vitest.config.ts
+```
 
-The stack below mirrors the `package-lock.json` and reflects every top-level dependency currently used:
-
-### Runtime Dependencies
-
-| Package | Version | Purpose |
-| --- | --- | --- |
-| `next` | 16.2.9 | App Router, server actions, RSC |
-| `react`, `react-dom` | 19.2.7 | UI runtime |
-| `react-dropzone` | ^15.0.0 | Accessible drag-and-drop uploads |
-| `unstructured-client` | ^0.31.0 | Official SDK for Unstructured API |
-| `zustand` | 5.0.14 | Lightweight upload store |
-
-### Dev / Build Tooling
-
-| Package | Version | Purpose |
-| --- | --- | --- |
-| `tailwindcss`, `@tailwindcss/postcss` | 4.3.1 | Styling via Tailwind v4 pipeline |
-| `postcss` | 8.5.15 | CSS transforms |
-| `typescript` | ^6.0.3 | Type safety |
-| `eslint`, `eslint-config-next` | 10.5.0 / 16.2.9 | Linting |
-| `@types/node`, `@types/react`, `@types/react-dom` | 25.9.4 / 19.2.17 / 19.2.3 | Type defs for Node/React |
-
----
-
-## Getting Started
+## Getting started
 
 ### Prerequisites
 
-- Node.js **18.18+** or **20+**
-- npm **10+**
-- Active Unstructured API key and server URL
+- Node.js 20.9+ (22 recommended)
+- npm
+- An Unstructured API key (unless using fixtures only)
 
-### Installation
+### Clone and install
 
 ```bash
 git clone https://github.com/brown2020/unstructured-api-demo.git
 cd unstructured-api-demo
 npm install
-cp .env.example .env.local
 ```
 
-### Development
+### Environment variables
+
+Copy `.env.example` to `.env.local`. **Never commit real keys.**
+
+| Variable | Purpose | Where to get it |
+| --- | --- | --- |
+| `UNSTRUCTURED_API_KEY` | Auth for Unstructured partition API | [Unstructured](https://unstructured.io) dashboard |
+| `UNSTRUCTURED_API_URL` | API endpoint (default in example: `https://api.unstructured.io/general/v0/general`) | Unstructured docs / dashboard |
+| `UNSTRUCTURED_USE_FIXTURES` | `true` to use labeled fixture responses (CI / no credits) | Set locally or in CI |
+
+### Run locally
 
 ```bash
-npm run dev        # Start Next.js in development mode
-npm run build      # Create an optimized production build
-npm run start      # Serve the production build
-npm run lint       # Run ESLint
-npm run typecheck  # TypeScript --noEmit
-npm test           # Vitest (fixtures; no paid Unstructured calls)
+npm run dev
 ```
 
-> **Heads-up:** Next.js 16 currently treats `next lint` script names as project directories. If you encounter “Invalid project directory …/lint”, run `npx next lint` directly as a workaround until the upstream bug is fixed.
+Open [http://localhost:3000](http://localhost:3000).
 
----
+Fixture-only checks:
 
-## Environment Variables
-
-Create `.env.local` with the following keys:
-
-```env
-UNSTRUCTURED_API_KEY=your_api_key
-UNSTRUCTURED_API_URL=https://api.unstructured.io/general/v0/general
-
-# Optional — CI / app-eval fixtures (no live Unstructured calls)
-# UNSTRUCTURED_USE_FIXTURES=true
+```bash
+UNSTRUCTURED_USE_FIXTURES=true npm test
+UNSTRUCTURED_USE_FIXTURES=true npm run build
 ```
 
-Optional tweaks:
+## Scripts
 
-| Variable | Description |
+| Script | Description |
 | --- | --- |
-| `UNSTRUCTURED_API_URL` | Override default base URL / proxy |
-| `NEXT_PUBLIC_ANALYTICS_ENABLED` | Wire up custom logging if you add it |
+| `npm run dev` | Development server |
+| `npm run build` | Production build |
+| `npm start` | Serve production build |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm test` | Vitest |
+| `npm run validate` | lint + typecheck + test + build |
 
----
+## Testing and CI
 
-## Project Structure
+CI (`.github/workflows/ci.yml`) on `dev` / `main` and PRs:
 
-```
-src/
-├── actions/
-│   └── parse.ts               # Server action entry point
-├── app/
-│   ├── layout.tsx             # RSC root layout
-│   └── page.tsx               # Home route compostion
-├── components/
-│   ├── DocumentContent.tsx    # Renders normalized chunks
-│   ├── DocumentElements.tsx   # Per-element presenters
-│   ├── LoadingSkeleton.tsx
-│   ├── UploadAndParse.tsx     # Hero + client island slot
-│   └── upload/
-│       └── ClientUploadPanel.tsx
-├── hooks/
-│   └── useFileUpload.ts       # Dropzone + store wiring
-├── lib/
-│   ├── document-utils.ts      # File validation + chunking
-│   └── unstructured-client.ts # SDK wrapper
-├── stores/
-│   └── upload-store.ts        # Zustand store definition
-└── types/
-    └── index.ts               # Shared TypeScript contracts
-```
+1. `npm ci --ignore-scripts`
+2. `npm run lint`
+3. `npm run typecheck`
+4. `npm test` with `UNSTRUCTURED_USE_FIXTURES=true`
+5. `npm run build` with `UNSTRUCTURED_USE_FIXTURES=true`
 
----
+Live Unstructured keys are optional for this gate. Tests cover parse action behavior (fixtures), document utils, and parse error mapping.
+
+## Deployment
+
+Deploy to Vercel or any Node host that supports Next.js. Set `UNSTRUCTURED_API_KEY` and `UNSTRUCTURED_API_URL` in the host environment for live parsing. No GitHub `homepageUrl` is configured for this repository.
 
 ## Contributing
 
-1. Fork the repository.
-2. Create a feature branch: `git checkout -b feature/my-improvement`.
-3. Commit with context: `git commit -m "feat: add table renderer"`.
-4. Push and open a PR describing motivation, testing, and screenshots/video of the flow.
-
-We welcome ideas such as streaming progress indicators, AI summarization via Vercel AI SDK, additional file validations, or automated tests (Jest + React Testing Library).
-
----
+1. Work on `dev`.
+2. Prefer fixtures when iterating on UI/chunking without spending API credits.
+3. Run `npm run validate` (or at least lint/typecheck/test) before pushing.
+4. Do not commit `.env.local` or secrets.
 
 ## License
 
-Distributed under the [MIT License](./LICENSE). See the license file for details.
-
----
-
-### Support
-
-Questions or ideas? Open an issue or reach out at [info@ignitechannel.com](mailto:info@ignitechannel.com). Contributions and feedback are always appreciated!
+No `LICENSE` file is present in this repository.

@@ -26,6 +26,16 @@ describe("friendlyParseMessage", () => {
     expect(friendlyParseMessage(err)).toMatch(/reach|network|URL/i);
   });
 
+  it("hides production server-action redaction", () => {
+    const msg = friendlyParseMessage(
+      new Error(
+        "Minified React error #441; visit https://react.dev/errors/441 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+      ),
+    );
+    expect(msg).not.toMatch(/minified react error/i);
+    expect(msg).toMatch(/couldn't parse|API key/i);
+  });
+
   it("preserves short human messages", () => {
     expect(
       friendlyParseMessage(

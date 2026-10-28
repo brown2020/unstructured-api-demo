@@ -83,7 +83,14 @@ export function friendlyParseMessage(error: unknown): string {
   }
 
   if (lower.includes("413") || lower.includes("too large") || lower.includes("payload")) {
-    return "The document is too large for the Unstructured API. Try a smaller file (under 10MB).";
+    return "The document is too large for the Unstructured API. Try a smaller file (under 4MB).";
+  }
+
+  if (
+    lower.includes("minified react error") ||
+    lower.includes("omitted in production")
+  ) {
+    return FALLBACK;
   }
 
   if (lower.includes("no elements found") || lower.includes("no readable content")) {

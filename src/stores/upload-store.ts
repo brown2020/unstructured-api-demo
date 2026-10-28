@@ -12,7 +12,8 @@ interface UploadState {
   status: UploadStatus;
   errorMessage: string | null;
   showRawJson: boolean;
-  uploadDocument: (file: File, opts?: { isHighRes?: boolean }) => Promise<void>;
+  uploadDocument: (file: File) => Promise<void>;
+  parseGeneration: number;
   toggleShowRaw: () => void;
   setError: (message: string) => void;
   reset: () => void;
@@ -25,11 +26,14 @@ const initialState = {
   status: "idle" as const,
   errorMessage: null,
   showRawJson: false,
+  parseGeneration: 0,
 };
+
+let parseGeneration = 0;
 
 export const useUploadStore = create<UploadState>((set) => ({
   ...initialState,
-  uploadDocument: async (file, opts) => {
+  uploadDocument: async (file) => {
     // Increment upload ID to invalidate any in-flight requests
     const uploadId = ++currentUploadId;
 
@@ -42,14 +46,22 @@ export const useUploadStore = create<UploadState>((set) => ({
     formData.append("file", file);
 
     try {
-      const chunks = await parseFile(formData, opts?.isHighRes ?? false);
+      const result = await parseFile(formData);
 
       // Check if this upload is still current (not superseded by another)
       if (uploadId !== currentUploadId) {
         return;
       }
 
-      if (!chunks?.length) {
+      if (!result.ok) {
+        set({
+          status: "error",
+          errorMessage: result.message,
+        });
+        return;
+      }
+
+      if (!result.chunks.length) {
         set({
           status: "error",
           errorMessage: "No readable content found.",
@@ -57,14 +69,20 @@ export const useUploadStore = create<UploadState>((set) => ({
         return;
       }
 
-      set({ chunks, status: "ready", errorMessage: null });
+      parseGeneration += 1;
+      set({
+        chunks: result.chunks,
+        status: "ready",
+        errorMessage: null,
+        parseGeneration,
+      });
     } catch (error) {
       // Check if this upload is still current
       if (uploadId !== currentUploadId) {
         return;
       }
 
-      // Soft-catch network/SDK failures — UI banner only, never console.error(Error)
+      // Soft-catch unexpected client failures — UI banner only
       set({
         status: "error",
         errorMessage: friendlyParseMessage(error),
@@ -80,5 +98,8 @@ export const useUploadStore = create<UploadState>((set) => ({
       status: "error",
       errorMessage: message,
     }),
-  reset: () => set(initialState),
+  reset: () => {
+    currentUploadId += 1;
+    set(initialState);
+  },
 }));

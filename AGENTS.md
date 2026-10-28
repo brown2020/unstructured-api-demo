@@ -37,7 +37,7 @@ Keep the dependency direction boring: UI and hooks may use store/actions/utiliti
 
 ## Fixtures / CI
 
-- Set `UNSTRUCTURED_USE_FIXTURES=true` for local/CI proofs without burning Unstructured credits.
+- Set `UNSTRUCTURED_USE_FIXTURES=true` for local/CI proofs without burning Unstructured credits. The flag is ignored when `NODE_ENV` is `production`.
 - Fixture short-circuit runs **after** upload validation so denial tests stay honest.
 - Never commit `UNSTRUCTURED_API_KEY` or inline secrets in `.github/workflows/*` — use `${{ secrets.* }}` only when a non-gate job needs them.
 - GitHub Actions gate job must tolerate missing secrets (fixtures + deferred SDK init).

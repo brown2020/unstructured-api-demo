@@ -11,12 +11,12 @@ This application demonstrates uploading PDF, PNG, JPG, or JPEG files and parsing
 - `react-dropzone` handles drag-and-drop selection, single-file upload, client-side MIME/size filtering, and rejected-file messages.
 - Zustand stores upload status, parsed chunks, errors, and the raw JSON toggle.
 - `parseFile` is a Server Action that validates the uploaded `FormData`, creates an `UnstructuredService`, sends the file buffer to the SDK, and organizes returned elements into chunks.
-- `document-utils.ts` enforces a 10 MB upload limit and accepted PDF/PNG/JPEG file types on the server.
+- `document-utils.ts` enforces a 4 MB upload limit and accepted PDF/PNG/JPEG file types on the server.
 - `unstructured-client.ts` reads `UNSTRUCTURED_API_KEY` and `UNSTRUCTURED_API_URL` from server environment variables and maps SDK failures into `ParseError`.
 
 ## Key User Workflows
 
-- Upload a supported file under 10 MB.
+- Upload a supported file under 4 MB.
 - See parsing progress while the Server Action runs.
 - Read parsed document chunks grouped by headings and page breaks.
 - Toggle between readable rendering and raw JSON.

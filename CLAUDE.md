@@ -63,7 +63,7 @@ Zustand store (`upload-store.ts`) manages:
 
 ### File Validation
 - Accepted types: PDF, PNG, JPEG
-- Max size: 10MB
+- Max size: 4MB (under Vercel's 4.5MB function body cap)
 - Constants in `lib/document-utils.ts`: `ACCEPTED_FILE_TYPES`, `MAX_FILE_SIZE_BYTES`
 
 ### Document Chunking

@@ -5,12 +5,12 @@ A Next.js demo for [Unstructured.io](https://unstructured.io): drag-and-drop a P
 ## Features
 
 - **Drag-and-drop upload** — `react-dropzone` client island; single file; PDF / PNG / JPEG
-- **10 MB server + client limit** — validated in `document-utils` and the upload UI
-- **Server Action parsing** — `parseFile` sends the buffer through `unstructured-client`
+- **4 MB server + client limit** — stays under Vercel's 4.5 MB function body cap
+- **Server Action parsing** — `parseFile` checks origin and rate-limits calls, then sends the buffer through `unstructured-client`
 - **Chunked rendering** — elements grouped by titles/headings and page breaks; type-aware display
 - **Raw JSON toggle** — inspect the structured response alongside the readable view
 - **Error handling** — validation and API failures surface without crashing the page (`ErrorBoundary` + store errors)
-- **Fixture mode** — `UNSTRUCTURED_USE_FIXTURES=true` short-circuits live API calls for CI / local demos
+- **Fixture mode** — `UNSTRUCTURED_USE_FIXTURES=true` short-circuits live API calls in development and test. Production ignores the flag.
 
 No authentication, Firebase, Stripe, or AI providers in this repo.
 
@@ -40,7 +40,7 @@ src/
   types/
 .env.example
 .github/workflows/ci.yml
-vitest.config.ts
+vitest.config.mts
 ```
 
 ## Getting started
@@ -67,7 +67,8 @@ Copy `.env.example` to `.env.local`. **Never commit real keys.**
 | --- | --- | --- |
 | `UNSTRUCTURED_API_KEY` | Auth for Unstructured partition API | [Unstructured](https://unstructured.io) dashboard |
 | `UNSTRUCTURED_API_URL` | API endpoint (default in example: `https://api.unstructured.io/general/v0/general`) | Unstructured docs / dashboard |
-| `UNSTRUCTURED_USE_FIXTURES` | `true` to use labeled fixture responses (CI / no credits) | Set locally or in CI |
+| `UNSTRUCTURED_USE_FIXTURES` | `true` for labeled fixture responses in development and test. Ignored when `NODE_ENV=production` | Set locally or in CI |
+| `UNSTRUCTURED_HI_RES` | Optional. `true` selects the Hi-Res partition strategy on the server. Unset uses Auto | Server environment only |
 
 ### Run locally
 

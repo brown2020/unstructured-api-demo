@@ -17,6 +17,40 @@ import { toFriendlyParseError } from "@/lib/parse-errors";
  * plus SDK console.error overlays. We send the whole file in one partition
  * call (splitPdfPage: false) so multi-page docs work through the API.
  */
+
+export const UNSTRUCTURED_TIMEOUT_MS = 120_000;
+
+export const UNSTRUCTURED_RETRY = {
+  strategy: "backoff" as const,
+  backoff: {
+    initialInterval: 500,
+    maxInterval: 4_000,
+    exponent: 1.5,
+    maxElapsedTime: 15_000,
+  },
+  retryConnectionErrors: true,
+};
+
+export function buildPartitionParameters(
+  buffer: ArrayBuffer,
+  filename: string,
+  isHighRes: boolean,
+) {
+  return {
+    files: {
+      content: buffer,
+      fileName: filename,
+    },
+    strategy: isHighRes ? Strategy.HiRes : Strategy.Auto,
+    // Disable SplitPdfHook parallel page requests (page-2 failure root cause).
+    splitPdfPage: false,
+    // Keep failed pages fatal. Allowing them would drop pages if splitting is re-enabled.
+    splitPdfAllowFailed: false,
+    includePageBreaks: true,
+    uniqueElementIds: true,
+  };
+}
+
 export class UnstructuredService {
   private client: UnstructuredClient | null = null;
   private readonly config: UnstructuredConfig;
@@ -43,6 +77,8 @@ export class UnstructuredService {
       this.client = new UnstructuredClient({
         security: { apiKeyAuth: this.config.apiKey },
         serverURL: this.config.apiURL,
+        timeoutMs: UNSTRUCTURED_TIMEOUT_MS,
+        retryConfig: UNSTRUCTURED_RETRY,
       });
     }
     return this.client;
@@ -55,17 +91,7 @@ export class UnstructuredService {
   ): Promise<Element[]> {
     try {
       const partitionResponse = await this.getClient().general.partition({
-        partitionParameters: {
-          files: {
-            content: buffer,
-            fileName: filename,
-          },
-          strategy: isHighRes ? Strategy.HiRes : Strategy.Auto,
-          // Disable SplitPdfHook parallel page requests (page-2 failure root cause).
-          splitPdfPage: false,
-          // Soft-fail if a future default re-enables splitting.
-          splitPdfAllowFailed: true,
-        },
+        partitionParameters: buildPartitionParameters(buffer, filename, isHighRes),
       });
 
       return this.processResponse(partitionResponse);

@@ -7,6 +7,8 @@
 import type { Chunk, Element } from "@/types";
 
 export function unstructuredFixturesEnabled(): boolean {
+  // A production deploy must not silently serve labeled sample chunks.
+  if (process.env.NODE_ENV === "production") return false;
   return process.env.UNSTRUCTURED_USE_FIXTURES === "true";
 }
 

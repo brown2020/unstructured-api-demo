@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   organizeElementsIntoChunks,
   processFileUpload,
+  validateFileSignature,
   validateFileType,
   MAX_FILE_SIZE_BYTES,
 } from "./document-utils";
@@ -45,6 +46,15 @@ describe("validateFileType", () => {
       validateFileType(new File([""], "a.txt", { type: "text/plain" }))
     ).toBe(false);
   });
+
+  it("rejects a mismatched mime and extension", () => {
+    expect(
+      validateFileType(new File([""], "notes.html", { type: "application/pdf" }))
+    ).toBe(false);
+    expect(
+      validateFileType(new File([""], "x.pdf", { type: "text/html" }))
+    ).toBe(false);
+  });
 });
 
 describe("processFileUpload denial", () => {
@@ -67,6 +77,22 @@ describe("processFileUpload denial", () => {
     });
     fd.append("file", big);
     await expect(processFileUpload(fd)).rejects.toThrow(/large|10\s*mb/i);
+  });
+
+  it("rejects bytes that do not match the extension", async () => {
+    const fd = new FormData();
+    fd.append(
+      "file",
+      new File(["<html></html>"], "x.pdf", { type: "application/pdf" }),
+    );
+    await expect(processFileUpload(fd)).rejects.toThrow(/content does not match/i);
+  });
+
+  it("accepts an empty mime when the extension and signature match", async () => {
+    const fd = new FormData();
+    fd.append("file", new File(["%PDF-1.4"], "scan.PDF", { type: "" }));
+    const result = await processFileUpload(fd);
+    expect(result.filename).toBe("scan.PDF");
   });
 
   it("accepts valid pdf", async () => {
@@ -92,9 +118,9 @@ describe("organizeElementsIntoChunks", () => {
     ]);
     expect(chunks).toHaveLength(2);
     expect(chunks[0].heading).toBe("Intro");
-    expect(chunks[0].content.map((c) => c.element_id)).toEqual(["n1", "n2"]);
+    expect(chunks[0].content.map((c) => c.element_id)).toEqual(["t1", "n1", "n2"]);
     expect(chunks[1].heading).toBe("Next");
-    expect(chunks[1].content[0].element_id).toBe("e1");
+    expect(chunks[1].content.map((item) => item.element_id)).toEqual(["t2", "e1"]);
   });
 
   it("resets heading on PageBreak", () => {
@@ -107,5 +133,40 @@ describe("organizeElementsIntoChunks", () => {
     expect(chunks[0].heading).toBe("A");
     expect(chunks[1].heading).toBeNull();
     expect(chunks[1].content[0].element_id).toBe("n2");
+  });
+
+  it("keeps consecutive headings instead of dropping them", () => {
+    const chunks = organizeElementsIntoChunks([
+      el("Title", "t1", "A"),
+      el("Heading", "t2", "B"),
+    ]);
+    expect(chunks).toHaveLength(2);
+    expect(chunks[0].heading).toBe("A");
+    expect(chunks[0].content.map((item) => item.element_id)).toEqual(["t1"]);
+    expect(chunks[1].heading).toBe("B");
+    expect(chunks[1].content.map((item) => item.element_id)).toEqual(["t2"]);
+  });
+});
+
+describe("validateFileSignature", () => {
+  it("matches pdf, png, and jpeg magic bytes", () => {
+    expect(
+      validateFileSignature(
+        "a.pdf",
+        Uint8Array.from([0x25, 0x50, 0x44, 0x46]).buffer,
+      ),
+    ).toBe(true);
+    expect(
+      validateFileSignature(
+        "a.png",
+        Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).buffer,
+      ),
+    ).toBe(true);
+    expect(
+      validateFileSignature("a.jpg", Uint8Array.from([0xff, 0xd8, 0xff, 0x00]).buffer),
+    ).toBe(true);
+    expect(
+      validateFileSignature("a.pdf", new TextEncoder().encode("<html>").buffer),
+    ).toBe(false);
   });
 });

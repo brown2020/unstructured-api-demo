@@ -11,6 +11,7 @@ export function ClientUploadPanel() {
     isLoading,
     error,
     showRawJson,
+    parseGeneration,
     toggleShowRaw,
     getRootProps,
     getInputProps,
@@ -35,7 +36,7 @@ export function ClientUploadPanel() {
         {...getRootProps()}
         className={dropzoneClassName}
         aria-disabled={isDisabled}
-        aria-label="Upload document dropzone. Accepts PDF, PNG, and JPEG under 10MB."
+        aria-label="Upload document dropzone. Accepts PDF, PNG, and JPEG under 4MB."
       >
         <input {...getInputProps()} aria-label="Upload document" />
         <div className="space-y-4">
@@ -50,7 +51,7 @@ export function ClientUploadPanel() {
                 : "Drag & drop your document here, or click to browse"}
           </p>
           <p className="text-sm text-gray-600">
-            Supports PDF, PNG, and JPEG files under 10MB
+            Supports PDF, PNG, and JPEG files under 4MB
           </p>
         </div>
       </div>
@@ -88,7 +89,7 @@ export function ClientUploadPanel() {
               {showRawJson ? "Show Readable Format" : "Show Raw JSON"}
             </button>
           </div>
-          <ErrorBoundary>
+          <ErrorBoundary key={parseGeneration} resetKey={parseGeneration}>
             <DocumentContent data={parsedData} showRawJson={showRawJson} />
           </ErrorBoundary>
         </div>

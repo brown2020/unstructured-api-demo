@@ -18,6 +18,7 @@ interface UseFileUploadReturn {
   isLoading: boolean;
   error: string | null;
   showRawJson: boolean;
+  parseGeneration: number;
   toggleShowRaw: () => void;
   getRootProps: () => DropzoneRootProps;
   getInputProps: () => DropzoneInputProps;
@@ -33,6 +34,7 @@ export function useFileUpload(): UseFileUploadReturn {
     status,
     error,
     showRawJson,
+    parseGeneration,
     toggleShowRaw,
     uploadDocument,
     reset,
@@ -43,6 +45,7 @@ export function useFileUpload(): UseFileUploadReturn {
       status: state.status,
       error: state.errorMessage,
       showRawJson: state.showRawJson,
+      parseGeneration: state.parseGeneration,
       toggleShowRaw: state.toggleShowRaw,
       uploadDocument: state.uploadDocument,
       reset: state.reset,
@@ -65,7 +68,7 @@ export function useFileUpload(): UseFileUploadReturn {
     }
 
     if (firstError.code === "file-too-large") {
-      setError("File is too large. Please keep uploads under 10MB.");
+      setError("File is too large. Please keep uploads under 4MB.");
       return;
     }
 
@@ -97,6 +100,7 @@ export function useFileUpload(): UseFileUploadReturn {
     isLoading: status === "uploading",
     error,
     showRawJson,
+    parseGeneration,
     toggleShowRaw,
     getRootProps,
     getInputProps,

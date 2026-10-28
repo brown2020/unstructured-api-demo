@@ -2,7 +2,8 @@
 const nextConfig = {
   experimental: {
     serverActions: {
-      bodySizeLimit: "20mb",
+      // Vercel rejects function bodies over 4.5MB. Leave room for multipart framing.
+      bodySizeLimit: "4.5mb",
     },
   },
 };

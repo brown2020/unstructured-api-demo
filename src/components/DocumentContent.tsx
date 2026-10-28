@@ -1,8 +1,14 @@
 "use client";
 
 import { useMemo } from "react";
-import type { Chunk } from "@/types";
+import type { Chunk, Element } from "@/types";
 import { DocumentElement } from "./DocumentElements";
+
+function isPromotedHeading(chunk: Chunk, element: Element, index: number): boolean {
+  if (index !== 0 || chunk.heading == null) return false;
+  if (element.type !== "Title" && element.type !== "Heading") return false;
+  return (element.text?.trim() || null) === chunk.heading;
+}
 
 interface DocumentContentProps {
   data: Chunk[] | null;
@@ -46,9 +52,12 @@ export function DocumentContent({ data, showRawJson }: DocumentContentProps) {
 
   return (
     <div className="space-y-6" style={{ overflowWrap: "anywhere" }}>
-      {normalizedChunks.map((chunk) => {
+      {normalizedChunks.map((chunk, chunkIndex) => {
         const firstId = chunk.content[0]?.element_id ?? "empty";
-        const sectionKey = `${chunk.heading ?? "chunk"}:${firstId}`;
+        const sectionKey = `${chunkIndex}:${firstId}`;
+        const visibleContent = chunk.content.filter(
+          (item, index) => !isPromotedHeading(chunk, item, index),
+        );
         return (
           <section
             key={sectionKey}
@@ -60,8 +69,8 @@ export function DocumentContent({ data, showRawJson }: DocumentContentProps) {
               </h2>
             )}
             <div className="space-y-5">
-              {chunk.content.map((item) => (
-                <DocumentElement key={item.element_id} element={item} />
+              {visibleContent.map((item, index) => (
+                <DocumentElement key={`${chunkIndex}:${index}:${item.element_id}`} element={item} />
               ))}
             </div>
           </section>

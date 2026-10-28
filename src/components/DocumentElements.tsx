@@ -1,4 +1,5 @@
 import { Element } from "@/types";
+import { safeMailtoHref } from "@/lib/safe-mailto";
 
 interface DocumentElementProps {
   element: Element;
@@ -20,10 +21,6 @@ const getTableRows = (text: string) => {
   return hasStructuredColumns ? rows : null;
 };
 
-function lineKey(elementId: string, line: string): string {
-  // Stable key from element id + line content (not array index)
-  return `${elementId}:${line.slice(0, 64)}`;
-}
 
 const elementComponents = {
   Title: ({ element }: DocumentElementProps) => {
@@ -39,9 +36,9 @@ const elementComponents = {
     if (lines.length === 0) return null;
     return (
       <div className="space-y-3 break-words">
-        {lines.map((line) => (
+        {lines.map((line, index) => (
           <p
-            key={lineKey(element.element_id, line)}
+            key={`${element.element_id}:line:${index}`}
             className="text-gray-700 leading-relaxed"
           >
             {line}
@@ -59,9 +56,9 @@ const elementComponents = {
     if (lines.length === 0) return null;
     return (
       <div className="space-y-2 break-words">
-        {lines.map((line) => (
+        {lines.map((line, index) => (
           <p
-            key={lineKey(element.element_id, line)}
+            key={`${element.element_id}:line:${index}`}
             className="text-gray-600 italic leading-relaxed"
           >
             {line}
@@ -91,9 +88,13 @@ const elementComponents = {
 
   EmailAddress: ({ element }: DocumentElementProps) => {
     if (!element.text) return null;
+    const href = safeMailtoHref(element.text);
+    if (!href) {
+      return <span className="text-gray-700">{element.text}</span>;
+    }
     return (
       <a
-        href={`mailto:${element.text}`}
+        href={href}
         className="text-blue-800 hover:text-blue-700 underline decoration-dotted"
       >
         {element.text}
@@ -131,13 +132,13 @@ const elementComponents = {
       <div className="overflow-x-auto rounded-lg border border-gray-200">
         <table className="min-w-full divide-y divide-gray-200 text-sm">
           <tbody className="divide-y divide-gray-100">
-            {rows.map((cells) => {
-              const rowKey = `${element.element_id}:row:${cells.join("|").slice(0, 80)}`;
+            {rows.map((cells, rowIndex) => {
+              const rowKey = `${element.element_id}:row:${rowIndex}`;
               return (
                 <tr key={rowKey}>
-                  {cells.map((cell) => (
+                  {cells.map((cell, cellIndex) => (
                     <td
-                      key={`${rowKey}:cell:${cell.slice(0, 40)}`}
+                      key={`${rowKey}:cell:${cellIndex}`}
                       className="px-3 py-2 align-top text-gray-700"
                     >
                       {cell}

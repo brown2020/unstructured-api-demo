@@ -1,30 +1,32 @@
 # Unstructured API Demo
 
-A Next.js demo for [Unstructured.io](https://unstructured.io): drag-and-drop a PDF or image, parse it on the server with the Unstructured SDK, and inspect either a readable chunk view or the raw JSON element list.
+A Next.js demo for [Unstructured.io](https://unstructured.io). Drop a PDF or image, parse it on the server with the Unstructured SDK, and inspect a readable chunk view or the raw JSON.
 
 ## Features
 
-- **Drag-and-drop upload** — `react-dropzone` client island; single file; PDF / PNG / JPEG
-- **4 MB server + client limit** — stays under Vercel's 4.5 MB function body cap
-- **Server Action parsing** — `parseFile` checks origin and rate-limits calls, then sends the buffer through `unstructured-client`
-- **Chunked rendering** — elements grouped by titles/headings and page breaks; type-aware display
-- **Raw JSON toggle** — inspect the structured response alongside the readable view
-- **Error handling** — validation and API failures surface without crashing the page (`ErrorBoundary` + store errors)
-- **Fixture mode** — `UNSTRUCTURED_USE_FIXTURES=true` short-circuits live API calls in development and test. Production ignores the flag.
-
-No authentication, Firebase, Stripe, or AI providers in this repo.
+- Drag-and-drop upload for a single PDF, PNG, or JPEG (`react-dropzone`)
+- 4 MB client and server limit, under the 4.5 MB Vercel function body cap
+- File type check requires a matching extension and PDF/PNG/JPEG magic bytes
+- `parseFile` Server Action checks the request origin and rate-limits calls, then partitions the file
+- Parse failures are returned as data so production does not redact the message
+- Chunks grouped by titles, headings, and page breaks, with type-aware rendering
+- Plain-address `mailto` links only
+- Raw JSON toggle
+- Hi-Res strategy is server-only
+- Fixture mode for development and test. Production ignores it
+- No authentication, Firebase, Stripe, or AI providers
 
 ## Tech stack
 
-| Layer | Choice |
+| Layer | Package |
 | --- | --- |
-| Framework | Next.js `^16.3.6` (App Router) |
-| UI | React `^19.3.0`, Tailwind CSS `^4.3.3`, react-dropzone `^15` |
-| Language | TypeScript `^6` |
-| Parsing | `unstructured-client` `^0.31` |
-| State | Zustand `^5` |
-| Tests | Vitest `^5` |
-| Lint | ESLint `^10` + `eslint-config-next` |
+| Framework | `next` `^16.4.3` (App Router) |
+| UI | `react` `^19.3.1`, `react-dom` `^19.3.1`, `tailwindcss` `^4.3.3`, `react-dropzone` `^20.1.4` |
+| Language | `typescript` `^6.0.3` |
+| Parsing | `unstructured-client` `^0.31.0` |
+| State | `zustand` `^5.0.16` |
+| Tests | `vitest` `^5.0.5`, `vite` `^8.3.5` |
+| Lint | `eslint` `^10.13.0`, `eslint-config-next` `^16.4.3` |
 | Node | `>=20.9.0` (CI uses 22) |
 
 ## Project structure
@@ -33,14 +35,16 @@ No authentication, Firebase, Stripe, or AI providers in this repo.
 src/
   app/                 # /, layout, not-found
   actions/parse.ts     # Server Action entry
-  components/          # UploadAndParse, document views, upload panel, error/loading UI
+  components/          # Upload shell, document views, upload panel, error/loading UI
   hooks/useFileUpload.ts
   stores/upload-store.ts
-  lib/                 # UnstructuredService, fixtures, validation/chunking, errors
+  lib/                 # Unstructured client, fixtures, validation, rate limit, errors
   types/
 .env.example
 .github/workflows/ci.yml
 vitest.config.mts
+SPEC.md
+roadmap.md
 ```
 
 ## Getting started
@@ -49,9 +53,9 @@ vitest.config.mts
 
 - Node.js 20.9+ (22 recommended)
 - npm
-- An Unstructured API key (unless using fixtures only)
+- An Unstructured API key for live parsing. Fixture mode does not need one.
 
-### Clone and install
+### Install
 
 ```bash
 git clone https://github.com/brown2020/unstructured-api-demo.git
@@ -61,28 +65,30 @@ npm install
 
 ### Environment variables
 
-Copy `.env.example` to `.env.local`. **Never commit real keys.**
+Copy `.env.example` to `.env.local`. Do not commit real keys. Names only:
 
-| Variable | Purpose | Where to get it |
+| Name | Required | Purpose |
 | --- | --- | --- |
-| `UNSTRUCTURED_API_KEY` | Auth for Unstructured partition API | [Unstructured](https://unstructured.io) dashboard |
-| `UNSTRUCTURED_API_URL` | API endpoint (default in example: `https://api.unstructured.io/general/v0/general`) | Unstructured docs / dashboard |
-| `UNSTRUCTURED_USE_FIXTURES` | `true` for labeled fixture responses in development and test. Ignored when `NODE_ENV=production` | Set locally or in CI |
-| `UNSTRUCTURED_HI_RES` | Optional. `true` selects the Hi-Res partition strategy on the server. Unset uses Auto | Server environment only |
+| `UNSTRUCTURED_API_KEY` | Live parsing | Server-only Unstructured API key |
+| `UNSTRUCTURED_API_URL` | Live parsing | Server-only partition endpoint |
+| `UNSTRUCTURED_HI_RES` | No | Set to `true` on the server to use the Hi-Res strategy. Unset uses Auto. Callers cannot turn this on |
+| `UNSTRUCTURED_USE_FIXTURES` | No | Set to `true` in development or test for labeled fixture chunks. Ignored when `NODE_ENV` is `production` |
 
-### Run locally
+The app reads these at request time. `next build` does not need them.
+
+### Run
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open the local dev server (port 3000 by default).
 
 Fixture-only checks:
 
 ```bash
 UNSTRUCTURED_USE_FIXTURES=true npm test
-UNSTRUCTURED_USE_FIXTURES=true npm run build
+npm run build
 ```
 
 ## Scripts
@@ -91,33 +97,33 @@ UNSTRUCTURED_USE_FIXTURES=true npm run build
 | --- | --- |
 | `npm run dev` | Development server |
 | `npm run build` | Production build |
-| `npm start` | Serve production build |
+| `npm start` | Serve the production build |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm test` | Vitest |
-| `npm run validate` | lint + typecheck + test + build |
+| `npm run validate` | lint, typecheck, test, and build |
 
 ## Testing and CI
 
-CI (`.github/workflows/ci.yml`) on `dev` / `main` and PRs:
+`.github/workflows/ci.yml` runs on `dev`, `main`, and pull requests:
 
 1. `npm ci --ignore-scripts`
 2. `npm run lint`
 3. `npm run typecheck`
-4. `npm test` with `UNSTRUCTURED_USE_FIXTURES=true`
-5. `npm run build` with `UNSTRUCTURED_USE_FIXTURES=true`
+4. `npm test` with `UNSTRUCTURED_USE_FIXTURES` enabled
+5. `npm run build` with `UNSTRUCTURED_USE_FIXTURES` enabled
 
-Live Unstructured keys are optional for this gate. Tests cover parse action behavior (fixtures), document utils, and parse error mapping.
+The gate does not use a live API key. Tests cover the parse action, origin and rate limits, file validation, chunking, the Unstructured request shape, fixtures, and upload-store races.
 
 ## Deployment
 
-Deploy to Vercel or any Node host that supports Next.js. Set `UNSTRUCTURED_API_KEY` and `UNSTRUCTURED_API_URL` in the host environment for live parsing. No GitHub `homepageUrl` is configured for this repository.
+Deploy to Vercel or any Node host that supports Next.js. Set `UNSTRUCTURED_API_KEY` and `UNSTRUCTURED_API_URL` in the host environment for live parsing. Leave `UNSTRUCTURED_USE_FIXTURES` unset in production.
 
 ## Contributing
 
 1. Work on `dev`.
-2. Prefer fixtures when iterating on UI/chunking without spending API credits.
-3. Run `npm run validate` (or at least lint/typecheck/test) before pushing.
+2. Use fixtures when changing UI or chunking so you do not spend API credits.
+3. Run `npm run validate` before pushing.
 4. Do not commit `.env.local` or secrets.
 
 ## License

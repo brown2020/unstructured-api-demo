@@ -20,6 +20,10 @@ Punchlist for this demo. Not a commitment to build any of it.
 - Parsed documents are kept in memory in the browser only. Refresh clears them.
 - Fixture mode never runs in production, so a production host with only `UNSTRUCTURED_USE_FIXTURES=true` and no API key returns the not-configured error.
 
+## Deployment
+
+Vercel project linked Oct 28, 2026 (team `ignitechannel`, project `unstructured-api-demo`). Dev previews are at `unstructured-api-demo-git-dev-ignitechannel.vercel.app`. Live parsing needs `UNSTRUCTURED_API_KEY` and `UNSTRUCTURED_API_URL` set in Vercel. Those are not set yet.
+
 ## Open issues
 
 - No GitHub issues are tracked in this pass. File follow-ups from the list above on `dev`.

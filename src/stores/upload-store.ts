@@ -54,6 +54,7 @@ export const useUploadStore = create<UploadState>((set) => ({
 
       if (!result.ok) {
         set({
+          chunks: null,
           status: "error",
           errorMessage: result.message,
           demoMessage: null,
@@ -63,8 +64,10 @@ export const useUploadStore = create<UploadState>((set) => ({
 
       if (!result.chunks.length) {
         set({
+          chunks: null,
           status: "error",
           errorMessage: "No readable content found.",
+          demoMessage: null,
         });
         return;
       }
@@ -85,6 +88,7 @@ export const useUploadStore = create<UploadState>((set) => ({
 
       // Soft-catch unexpected client failures — UI banner only
       set({
+        chunks: null,
         status: "error",
         errorMessage: friendlyParseMessage(error),
         demoMessage: null,
@@ -95,11 +99,15 @@ export const useUploadStore = create<UploadState>((set) => ({
     set((state) => ({
       showRawJson: !state.showRawJson,
     })),
-  setError: (message) =>
+  setError: (message) => {
+    currentUploadId += 1;
     set({
+      chunks: null,
       status: "error",
       errorMessage: message,
-    }),
+      demoMessage: null,
+    });
+  },
   reset: () => {
     currentUploadId += 1;
     set(initialState);

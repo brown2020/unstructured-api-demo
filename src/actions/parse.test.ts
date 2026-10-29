@@ -103,18 +103,11 @@ describe("parseFile denial and fixtures", () => {
     const result = await parseFile(fd);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.chunks.length).toBeGreaterThan(0);
-    expect(result.chunks[0].heading).toMatch(/\[fixture\]/i);
-    expect(
-      result.chunks.some((chunk) =>
-        chunk.content.some((el) =>
-          (el.text || "").toLowerCase().includes("[fixture]"),
-        ),
-      ),
-    ).toBe(true);
+    expect(result.demoMessage).toBe("Demo mode: sample results");
+    expect(result.chunks[0].heading).toBe("Quarterly Operations Summary");
   });
 
-  it("does not use fixtures when NODE_ENV is production", async () => {
+  it("uses demo mode in production when the flag is set or the key is missing", async () => {
     setNodeEnv("production");
     process.env.UNSTRUCTURED_USE_FIXTURES = "true";
     const fd = new FormData();
@@ -122,8 +115,15 @@ describe("parseFile denial and fixtures", () => {
       "file",
       new File(["%PDF"], "demo.pdf", { type: "application/pdf" }),
     );
-    const result = await parseFile(fd);
-    expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.message).toMatch(/UNSTRUCTURED_API_KEY/i);
+    const flagged = await parseFile(fd);
+    expect(flagged.ok).toBe(true);
+    if (!flagged.ok) return;
+    expect(flagged.demoMessage).toMatch(/^Demo mode: sample results/);
+
+    delete process.env.UNSTRUCTURED_USE_FIXTURES;
+    const missing = await parseFile(fd);
+    expect(missing.ok).toBe(true);
+    if (!missing.ok) return;
+    expect(missing.demoMessage).toMatch(/not configured/i);
   });
 });

@@ -10,6 +10,7 @@ export function ClientUploadPanel() {
     parsedData,
     isLoading,
     error,
+    demoMessage,
     showRawJson,
     parseGeneration,
     toggleShowRaw,
@@ -55,6 +56,16 @@ export function ClientUploadPanel() {
           </p>
         </div>
       </div>
+
+      {demoMessage && (
+        <div
+          className="p-4 bg-amber-50 border border-amber-200 rounded-xl"
+          role="status"
+          aria-live="polite"
+        >
+          <p className="text-amber-950">{demoMessage}</p>
+        </div>
+      )}
 
       {error && (
         <div

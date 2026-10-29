@@ -7,13 +7,14 @@ A Next.js demo for [Unstructured.io](https://unstructured.io). Drop a PDF or ima
 - Drag-and-drop upload for a single PDF, PNG, or JPEG (`react-dropzone`)
 - 4 MB client and server limit, under the 4.5 MB Vercel function body cap
 - File type check requires a matching extension and PDF/PNG/JPEG magic bytes
-- `parseFile` Server Action checks the request origin and rate-limits calls, then partitions the file
-- Parse failures are returned as data so production does not redact the message
+- `POST /api/parse` checks the request origin and rate-limits calls, then partitions the file
+- Upstream failures become fixed messages and HTTP status codes. The API key and raw response bodies are not returned
+- Demo mode returns sample partition results when `UNSTRUCTURED_USE_FIXTURES=true`, when the key or URL is missing, or after an auth or credit failure. A banner says `Demo mode: sample results`
 - Chunks grouped by titles, headings, and page breaks, with type-aware rendering
 - Plain-address `mailto` links only
 - Raw JSON toggle
 - Hi-Res strategy is server-only
-- Fixture mode for development and test. Production ignores it
+- Demo mode works in production. It does not prove live partition quality
 - No authentication, Firebase, Stripe, or AI providers
 
 ## Tech stack
@@ -33,8 +34,8 @@ A Next.js demo for [Unstructured.io](https://unstructured.io). Drop a PDF or ima
 
 ```
 src/
-  app/                 # /, layout, not-found
-  actions/parse.ts     # Server Action entry
+  app/                 # /, layout, not-found, api/parse
+  actions/parse.ts     # Server Action wrapper around the same parse path
   components/          # Upload shell, document views, upload panel, error/loading UI
   hooks/useFileUpload.ts
   stores/upload-store.ts
@@ -70,9 +71,9 @@ Copy `.env.example` to `.env.local`. Do not commit real keys. Names only:
 | Name | Required | Purpose |
 | --- | --- | --- |
 | `UNSTRUCTURED_API_KEY` | Live parsing | Server-only Unstructured API key |
-| `UNSTRUCTURED_API_URL` | Live parsing | Server-only partition endpoint |
+| `UNSTRUCTURED_API_URL` | Live parsing | Server-only API origin or full partition URL. Either form is accepted. The app strips a trailing `/general/v0/general` so the SDK does not append that path twice |
 | `UNSTRUCTURED_HI_RES` | No | Set to `true` on the server to use the Hi-Res strategy. Unset uses Auto. Callers cannot turn this on |
-| `UNSTRUCTURED_USE_FIXTURES` | No | Set to `true` in development or test for labeled fixture chunks. Ignored when `NODE_ENV` is `production` |
+| `UNSTRUCTURED_USE_FIXTURES` | No | Set to `true` to return sample results and skip the live API, including in production |
 
 The app reads these at request time. `next build` does not need them.
 
@@ -117,7 +118,7 @@ The gate does not use a live API key. Tests cover the parse action, origin and r
 
 ## Deployment
 
-Deploy to Vercel or any Node host that supports Next.js. Set `UNSTRUCTURED_API_KEY` and `UNSTRUCTURED_API_URL` in the host environment for live parsing. Leave `UNSTRUCTURED_USE_FIXTURES` unset in production.
+Deploy to Vercel or any Node host that supports Next.js. Set `UNSTRUCTURED_API_KEY` and `UNSTRUCTURED_API_URL` in the host environment for live parsing. If the key is missing, invalid, or the account is out of credits, the app shows sample results and a demo banner instead of failing silently. Set `UNSTRUCTURED_USE_FIXTURES` to `true` to force that sample path.
 
 ## Contributing
 

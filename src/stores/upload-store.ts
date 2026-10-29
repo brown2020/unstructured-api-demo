@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import type { Chunk } from "@/types";
-import { parseFile } from "@/actions/parse";
+import { postParse } from "@/lib/parse-client";
 import { friendlyParseMessage } from "@/lib/parse-errors";
 
 type UploadStatus = "idle" | "uploading" | "ready" | "error";
@@ -11,6 +11,7 @@ interface UploadState {
   chunks: Chunk[] | null;
   status: UploadStatus;
   errorMessage: string | null;
+  demoMessage: string | null;
   showRawJson: boolean;
   uploadDocument: (file: File) => Promise<void>;
   parseGeneration: number;
@@ -25,6 +26,7 @@ const initialState = {
   chunks: null,
   status: "idle" as const,
   errorMessage: null,
+  demoMessage: null,
   showRawJson: false,
   parseGeneration: 0,
 };
@@ -42,11 +44,8 @@ export const useUploadStore = create<UploadState>((set) => ({
       status: "uploading",
     });
 
-    const formData = new FormData();
-    formData.append("file", file);
-
     try {
-      const result = await parseFile(formData);
+      const result = await postParse(file);
 
       // Check if this upload is still current (not superseded by another)
       if (uploadId !== currentUploadId) {
@@ -57,6 +56,7 @@ export const useUploadStore = create<UploadState>((set) => ({
         set({
           status: "error",
           errorMessage: result.message,
+          demoMessage: null,
         });
         return;
       }
@@ -74,6 +74,7 @@ export const useUploadStore = create<UploadState>((set) => ({
         chunks: result.chunks,
         status: "ready",
         errorMessage: null,
+        demoMessage: result.demoMessage,
         parseGeneration,
       });
     } catch (error) {
@@ -86,6 +87,7 @@ export const useUploadStore = create<UploadState>((set) => ({
       set({
         status: "error",
         errorMessage: friendlyParseMessage(error),
+        demoMessage: null,
       });
     }
   },

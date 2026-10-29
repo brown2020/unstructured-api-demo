@@ -5,6 +5,7 @@ import type { PartitionResponse } from "unstructured-client/sdk/models/operation
 import { Strategy } from "unstructured-client/sdk/models/shared/index.js";
 import { Element, UnstructuredConfig, ParseError } from "@/types";
 import { toFriendlyParseError } from "@/lib/parse-errors";
+import { normalizeUnstructuredServerURL } from "@/lib/unstructured-url";
 
 /**
  * Deferred Unstructured SDK wrapper.
@@ -60,20 +61,22 @@ export class UnstructuredService {
   }
 
   static getConfig(): UnstructuredConfig {
-    const apiKey = process.env.UNSTRUCTURED_API_KEY;
-    const apiURL = process.env.UNSTRUCTURED_API_URL;
+    const apiKey = process.env.UNSTRUCTURED_API_KEY?.trim();
+    const apiURL = process.env.UNSTRUCTURED_API_URL?.trim();
 
     if (!apiKey || !apiURL) {
-      throw new Error(
-        "Missing Unstructured API configuration. Set UNSTRUCTURED_API_KEY and UNSTRUCTURED_API_URL."
-      );
+      throw new Error("Missing Unstructured API configuration.");
     }
 
-    return { apiKey, apiURL };
+    return {
+      apiKey,
+      apiURL: normalizeUnstructuredServerURL(apiURL),
+    };
   }
 
   private getClient(): UnstructuredClient {
     if (!this.client) {
+      // serverURL is the API origin. The SDK appends /general/v0/general itself.
       this.client = new UnstructuredClient({
         security: { apiKeyAuth: this.config.apiKey },
         serverURL: this.config.apiURL,

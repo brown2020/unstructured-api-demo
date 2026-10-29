@@ -1,125 +1,128 @@
 /**
- * Map opaque Unstructured SDK / network failures into short UI-safe messages.
- * Avoids Speakeasy "Unexpected HTTP client error" / SplitPdfHook noise in the UI.
+ * Map Unstructured failures to fixed UI copy.
+ * Status comes from the error object. Upstream bodies and messages are never returned.
  */
 
-const FALLBACK =
-  "We couldn't parse this document. Check your Unstructured API key/URL and try again.";
+export const AUTH_OR_CREDIT_MESSAGE =
+  "The parsing service key is invalid or the account is out of credits. Contact the site owner.";
 
-function collectErrorText(error: unknown): string {
-  const parts: string[] = [];
-  const visit = (value: unknown, depth: number) => {
-    if (depth > 4 || value == null) return;
-    if (typeof value === "string") {
-      parts.push(value);
-      return;
+export const QUOTA_MESSAGE =
+  "The parsing quota or rate limit was reached. Try again later.";
+
+export const UNAVAILABLE_MESSAGE = "The parsing service is unavailable.";
+
+export const DEMO_BANNER = "Demo mode: sample results";
+
+export const DEMO_UNCONFIGURED_BANNER = `${DEMO_BANNER}. The parsing service is not configured.`;
+
+const SAFE_MESSAGES = new Set([
+  "No file uploaded",
+  "Unsupported file type. Please upload a PDF or image file.",
+  "File is too large. Please keep uploads under 4MB.",
+  "The file content does not match a PDF or image.",
+  "No readable content found.",
+  "Upload blocked because the request origin is missing.",
+  "Upload blocked because the request origin is not allowed.",
+  "Too many parse requests. Wait a few minutes and try again.",
+  AUTH_OR_CREDIT_MESSAGE,
+  QUOTA_MESSAGE,
+  UNAVAILABLE_MESSAGE,
+  DEMO_BANNER,
+  DEMO_UNCONFIGURED_BANNER,
+]);
+
+export type UpstreamFailure = {
+  status: number;
+  message: string;
+  demoFallback: boolean;
+};
+
+function walkErrors(error: unknown, visit: (value: object) => boolean): void {
+  const seen = new Set<unknown>();
+  let current: unknown = error;
+  while (current && typeof current === "object" && !seen.has(current)) {
+    seen.add(current);
+    if (visit(current)) return;
+    current = (current as { cause?: unknown }).cause;
+  }
+}
+
+function readStatus(error: unknown): number | null {
+  let status: number | null = null;
+  walkErrors(error, (value) => {
+    const obj = value as { statusCode?: unknown; status?: unknown };
+    if (typeof obj.statusCode === "number" && obj.statusCode >= 100 && obj.statusCode <= 599) {
+      status = obj.statusCode;
+      return true;
     }
-    if (value instanceof Error) {
-      parts.push(value.message);
-      parts.push(value.name);
-      visit((value as Error & { cause?: unknown }).cause, depth + 1);
-      return;
+    if (typeof obj.status === "number" && obj.status >= 100 && obj.status <= 599) {
+      status = obj.status;
+      return true;
     }
-    if (typeof value === "object") {
-      const obj = value as Record<string, unknown>;
-      for (const key of ["message", "body", "details", "statusText", "error"]) {
-        if (typeof obj[key] === "string") parts.push(obj[key] as string);
-      }
+    return false;
+  });
+  return status;
+}
+
+function isTimeout(error: unknown): boolean {
+  let timedOut = false;
+  walkErrors(error, (value) => {
+    const name = (value as { name?: unknown }).name;
+    if (
+      name === "RequestTimeoutError" ||
+      name === "TimeoutError" ||
+      name === "AbortError"
+    ) {
+      timedOut = true;
+      return true;
     }
-  };
-  visit(error, 0);
-  return parts.join(" | ");
+    return false;
+  });
+  return timedOut;
+}
+
+export function classifyUpstreamFailure(error: unknown): UpstreamFailure {
+  if (isTimeout(error)) {
+    return { status: 504, message: UNAVAILABLE_MESSAGE, demoFallback: false };
+  }
+
+  const status = readStatus(error);
+  if (status === 401 || status === 403) {
+    return { status, message: AUTH_OR_CREDIT_MESSAGE, demoFallback: true };
+  }
+  if (status === 402) {
+    return { status: 402, message: QUOTA_MESSAGE, demoFallback: true };
+  }
+  if (status === 429) {
+    return { status: 429, message: QUOTA_MESSAGE, demoFallback: false };
+  }
+  if (status != null && status >= 500) {
+    return { status: 503, message: UNAVAILABLE_MESSAGE, demoFallback: false };
+  }
+
+  return { status: 503, message: UNAVAILABLE_MESSAGE, demoFallback: false };
+}
+
+export function demoBannerForFailure(failure: UpstreamFailure): string {
+  return `${DEMO_BANNER}. ${failure.message}`;
 }
 
 /** Convert any thrown parse failure into a friendly, non-technical message. */
 export function friendlyParseMessage(error: unknown): string {
-  const text = collectErrorText(error);
-  const lower = text.toLowerCase();
-
-  if (
-    lower.includes("missing unstructured api") ||
-    (lower.includes("configuration") && lower.includes("missing") && lower.includes("api"))
-  ) {
-    return "Unstructured API is not configured. Set UNSTRUCTURED_API_KEY and UNSTRUCTURED_API_URL in your environment, then restart the app.";
-  }
-
-  // SplitPdfHook: "Failed to send request for page N" wrapped as UnexpectedClientError
-  if (
-    lower.includes("failed to send request for page") ||
-    lower.includes("unexpected http client error") ||
-    lower.includes("unexpectedclienterror") ||
-    lower.includes("number of retries exceeded for page")
-  ) {
-    return "Could not finish parsing every page of this PDF (a page request to Unstructured failed). Check your API key/URL and network, or try again with a smaller file.";
-  }
-
-  if (
-    lower.includes("unable to make request") ||
-    lower.includes("connectionerror") ||
-    lower.includes("fetch failed") ||
-    lower.includes("econnrefused") ||
-    lower.includes("enotfound") ||
-    lower.includes("networkerror")
-  ) {
-    return "Could not reach the Unstructured API. Check UNSTRUCTURED_API_URL and your network connection.";
-  }
-
-  if (
-    lower.includes("request timed out") ||
-    lower.includes("timeout") ||
-    lower.includes("request aborted")
-  ) {
-    return "The Unstructured API request timed out. Try a smaller file or the Auto strategy.";
-  }
-
-  if (
-    lower.includes("401") ||
-    lower.includes("403") ||
-    lower.includes("unauthorized") ||
-    lower.includes("forbidden") ||
-    lower.includes("invalid api key")
-  ) {
-    return "Unstructured rejected the request (auth). Verify UNSTRUCTURED_API_KEY is valid.";
-  }
-
-  if (lower.includes("413") || lower.includes("too large") || lower.includes("payload")) {
-    return "The document is too large for the Unstructured API. Try a smaller file (under 4MB).";
-  }
-
-  if (
-    lower.includes("minified react error") ||
-    lower.includes("omitted in production")
-  ) {
-    return FALLBACK;
-  }
-
-  if (lower.includes("no elements found") || lower.includes("no readable content")) {
-    return "No readable content was found in this file.";
-  }
-
-  if (
-    error instanceof Error &&
-    error.message &&
-    error.message.length < 180 &&
-    !error.message.includes("Unexpected HTTP") &&
-    !/at\s+\S+\s+\(/.test(error.message)
-  ) {
+  if (error instanceof Error && SAFE_MESSAGES.has(error.message)) {
     return error.message;
   }
-
-  return FALLBACK;
+  return classifyUpstreamFailure(error).message;
 }
 
 export function toFriendlyParseError(error: unknown): Error {
-  const err = new Error(friendlyParseMessage(error));
+  const failure = classifyUpstreamFailure(error);
+  const err = new Error(
+    error instanceof Error && SAFE_MESSAGES.has(error.message)
+      ? error.message
+      : failure.message,
+  );
   err.name = "ParseError";
-  if (error && typeof error === "object") {
-    const obj = error as Record<string, unknown>;
-    if (typeof obj.statusCode === "number") {
-      (err as Error & { statusCode?: number }).statusCode = obj.statusCode;
-    } else if (typeof obj.status === "number") {
-      (err as Error & { statusCode?: number }).statusCode = obj.status;
-    }
-  }
+  (err as Error & { statusCode?: number }).statusCode = failure.status;
   return err;
 }

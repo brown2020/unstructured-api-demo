@@ -18,11 +18,11 @@ Punchlist for this demo. Not a commitment to build any of it.
 - Vercel still caps a function response at 4.5 MB. A very large partition JSON could fail after Unstructured has already parsed the file. That response size has not been measured here.
 - `UNSTRUCTURED_HI_RES=true` has no switch in the UI. Unset means Auto.
 - Parsed documents are kept in memory in the browser only. Refresh clears them.
-- Fixture mode never runs in production, so a production host with only `UNSTRUCTURED_USE_FIXTURES=true` and no API key returns the not-configured error.
+- A missing key, `UNSTRUCTURED_USE_FIXTURES=true`, or an auth or credit failure shows sample results. That sample is not the uploaded file.
 
 ## Deployment
 
-Vercel project linked Oct 28, 2026 (team `ignitechannel`, project `unstructured-api-demo`). Dev previews are at `unstructured-api-demo-git-dev-ignitechannel.vercel.app`. Live parsing needs `UNSTRUCTURED_API_KEY` and `UNSTRUCTURED_API_URL` set in Vercel. Those are not set yet.
+Vercel project linked Oct 28, 2026 (team `ignitechannel`, project `unstructured-api-demo`). Dev previews are at `unstructured-api-demo-git-dev-ignitechannel.vercel.app`. Live parsing needs `UNSTRUCTURED_API_KEY` and `UNSTRUCTURED_API_URL` set in Vercel. Those are not set yet, so the preview serves demo sample results. An invalid key or an account with no credits falls back to the same banner.
 
 ## Open issues
 

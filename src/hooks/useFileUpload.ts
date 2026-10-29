@@ -17,6 +17,7 @@ interface UseFileUploadReturn {
   parsedData: Chunk[] | null;
   isLoading: boolean;
   error: string | null;
+  demoMessage: string | null;
   showRawJson: boolean;
   parseGeneration: number;
   toggleShowRaw: () => void;
@@ -33,6 +34,7 @@ export function useFileUpload(): UseFileUploadReturn {
     parsedData,
     status,
     error,
+    demoMessage,
     showRawJson,
     parseGeneration,
     toggleShowRaw,
@@ -44,6 +46,7 @@ export function useFileUpload(): UseFileUploadReturn {
       parsedData: state.chunks,
       status: state.status,
       error: state.errorMessage,
+      demoMessage: state.demoMessage,
       showRawJson: state.showRawJson,
       parseGeneration: state.parseGeneration,
       toggleShowRaw: state.toggleShowRaw,
@@ -99,6 +102,7 @@ export function useFileUpload(): UseFileUploadReturn {
     parsedData,
     isLoading: status === "uploading",
     error,
+    demoMessage,
     showRawJson,
     parseGeneration,
     toggleShowRaw,

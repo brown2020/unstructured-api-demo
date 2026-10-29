@@ -1,20 +1,28 @@
 /**
- * Labeled fixtures for Unstructured partition responses.
- * Used when UNSTRUCTURED_USE_FIXTURES=true (CI / app-eval) to avoid burning paid credits.
- * Fixtures cannot prove live Unstructured partition quality, Hi-Res latency, or credit metering.
+ * Sample partition results for demo mode.
+ * Used when UNSTRUCTURED_USE_FIXTURES=true, when the API key or URL is missing,
+ * or as a fallback after an auth or credit failure. This does not call Unstructured.
  */
 
-import type { Chunk, Element } from "@/types";
+import type { Element } from "@/types";
 
 export function unstructuredFixturesEnabled(): boolean {
-  // A production deploy must not silently serve labeled sample chunks.
-  if (process.env.NODE_ENV === "production") return false;
   return process.env.UNSTRUCTURED_USE_FIXTURES === "true";
 }
 
-export function fixtureElements(filename: string): Element[] {
+export function unstructuredConfigMissing(): boolean {
+  const key = process.env.UNSTRUCTURED_API_KEY?.trim();
+  const url = process.env.UNSTRUCTURED_API_URL?.trim();
+  return !key || !url;
+}
+
+export function sampleElements(filename: string): Element[] {
   const baseMeta = {
-    filetype: "application/pdf",
+    filetype: filename.toLowerCase().endsWith(".png")
+      ? "image/png"
+      : filename.toLowerCase().endsWith(".jpg") || filename.toLowerCase().endsWith(".jpeg")
+        ? "image/jpeg"
+        : "application/pdf",
     languages: ["eng"],
     page_number: 1,
     filename,
@@ -23,37 +31,45 @@ export function fixtureElements(filename: string): Element[] {
   return [
     {
       type: "Title",
-      element_id: "fixture-title-1",
-      text: "[fixture] Sample Document",
+      element_id: "sample-title",
+      text: "Quarterly Operations Summary",
       metadata: { ...baseMeta },
     },
     {
       type: "NarrativeText",
-      element_id: "fixture-narrative-1",
-      text: "[fixture] This paragraph is a labeled Unstructured fixture — no live API call.",
+      element_id: "sample-intro",
+      text: "This sample shows how a parsed document is grouped into sections. It is not a live partition of the uploaded file.",
+      metadata: { ...baseMeta },
+    },
+    {
+      type: "Heading",
+      element_id: "sample-heading",
+      text: "Highlights",
       metadata: { ...baseMeta },
     },
     {
       type: "NarrativeText",
-      element_id: "fixture-narrative-2",
-      text: "Second line of fixture content for multi-line rendering.",
+      element_id: "sample-highlight",
+      text: "North region shipments stayed on schedule. West region inventory was restocked mid-quarter.",
+      metadata: { ...baseMeta },
+    },
+    {
+      type: "Table",
+      element_id: "sample-table",
+      text: "Region\tShipments\nNorth\t128\nWest\t96",
       metadata: { ...baseMeta },
     },
     {
       type: "EmailAddress",
-      element_id: "fixture-email-1",
-      text: "demo@example.com",
+      element_id: "sample-email",
+      text: "ops@example.com",
       metadata: { ...baseMeta },
     },
-  ];
-}
-
-export function fixtureChunks(filename: string): Chunk[] {
-  const elements = fixtureElements(filename);
-  return [
     {
-      heading: "[fixture] Sample Document",
-      content: elements.filter((el) => el.type !== "Title"),
+      type: "Footer",
+      element_id: "sample-footer",
+      text: filename,
+      metadata: { ...baseMeta, page_number: 1 },
     },
   ];
 }

@@ -52,7 +52,7 @@ src/
 ## Architecture Patterns
 
 ### Server Actions
-All document processing uses Next.js Server Actions (not API routes). The main entry point is `parseFile()` in `src/actions/parse.ts`.
+The upload UI posts to `POST /api/parse`. `parseFile()` in `src/actions/parse.ts` calls the same `runParse()` helper.
 
 ### State Management
 Zustand store (`upload-store.ts`) manages:

@@ -20,7 +20,9 @@ function isChunkArray(value: unknown): value is Chunk[] {
 
 function safeMessage(message: unknown, status: number): string {
   if (typeof message !== "string" || message.length === 0 || message.length > 300) {
-    return status === 429 ? "The parsing quota or rate limit was reached. Try again later." : UNAVAILABLE_MESSAGE;
+    return status === 429
+      ? "The parsing service rate limit was reached. Try again later."
+      : UNAVAILABLE_MESSAGE;
   }
   if (/bearer\s+|api[_-]?key\s*[:=]/i.test(message)) {
     return UNAVAILABLE_MESSAGE;
@@ -29,8 +31,8 @@ function safeMessage(message: unknown, status: number): string {
 }
 
 function safeDemoMessage(message: unknown): string | null {
-  if (typeof message !== "string" || !message.startsWith("Demo mode:")) return null;
-  if (message.length > 300) return "Demo mode: sample results";
+  if (typeof message !== "string" || !message.startsWith("Demo data")) return null;
+  if (message.length > 300) return "Demo data";
   return message;
 }
 

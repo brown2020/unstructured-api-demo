@@ -11,9 +11,7 @@ export function unstructuredFixturesEnabled(): boolean {
 }
 
 export function unstructuredConfigMissing(): boolean {
-  const key = process.env.UNSTRUCTURED_API_KEY?.trim();
-  const url = process.env.UNSTRUCTURED_API_URL?.trim();
-  return !key || !url;
+  return !process.env.UNSTRUCTURED_API_KEY?.trim();
 }
 
 export function sampleElements(filename: string): Element[] {

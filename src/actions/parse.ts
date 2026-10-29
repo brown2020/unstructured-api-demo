@@ -11,7 +11,7 @@ export type ParseFileResult =
 /**
  * Server Action wrapper around the same parse path as POST /api/parse.
  * The upload UI uses the route so HTTP status codes reach the browser.
- * Hi-Res is server-only (`UNSTRUCTURED_HI_RES=true`); callers cannot select it.
+ * The API key stays on the server. Callers cannot choose a parse profile.
  */
 export async function parseFile(formData: FormData): Promise<ParseFileResult> {
   const outcome = await runParse(await headers(), formData);

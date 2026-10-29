@@ -34,7 +34,6 @@ describe("parseFile denial and fixtures", () => {
   const prevKey = process.env.UNSTRUCTURED_API_KEY;
   const prevUrl = process.env.UNSTRUCTURED_API_URL;
   const prevNodeEnv = process.env.NODE_ENV;
-  const prevHiRes = process.env.UNSTRUCTURED_HI_RES;
 
   beforeEach(() => {
     resetParseGuardForTests();
@@ -42,7 +41,6 @@ describe("parseFile denial and fixtures", () => {
     process.env.UNSTRUCTURED_USE_FIXTURES = "true";
     delete process.env.UNSTRUCTURED_API_KEY;
     delete process.env.UNSTRUCTURED_API_URL;
-    delete process.env.UNSTRUCTURED_HI_RES;
     setNodeEnv(prevNodeEnv);
   });
 
@@ -53,8 +51,6 @@ describe("parseFile denial and fixtures", () => {
     else process.env.UNSTRUCTURED_API_KEY = prevKey;
     if (prevUrl === undefined) delete process.env.UNSTRUCTURED_API_URL;
     else process.env.UNSTRUCTURED_API_URL = prevUrl;
-    if (prevHiRes === undefined) delete process.env.UNSTRUCTURED_HI_RES;
-    else process.env.UNSTRUCTURED_HI_RES = prevHiRes;
     setNodeEnv(prevNodeEnv);
   });
 
@@ -80,7 +76,7 @@ describe("parseFile denial and fixtures", () => {
     fd.append("file", new File(["x"], "x.txt", { type: "text/plain" }));
     const result = await parseFile(fd);
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.message).toMatch(/unsupported|pdf|image/i);
+    if (!result.ok) expect(result.message).toMatch(/not supported/i);
   });
 
   it("rate limits repeated calls from the same address", async () => {
@@ -103,7 +99,7 @@ describe("parseFile denial and fixtures", () => {
     const result = await parseFile(fd);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.demoMessage).toBe("Demo mode: sample results");
+    expect(result.demoMessage).toBe("Demo data");
     expect(result.chunks[0].heading).toBe("Quarterly Operations Summary");
   });
 
@@ -118,7 +114,7 @@ describe("parseFile denial and fixtures", () => {
     const flagged = await parseFile(fd);
     expect(flagged.ok).toBe(true);
     if (!flagged.ok) return;
-    expect(flagged.demoMessage).toMatch(/^Demo mode: sample results/);
+    expect(flagged.demoMessage).toMatch(/^Demo data/);
 
     delete process.env.UNSTRUCTURED_USE_FIXTURES;
     const missing = await parseFile(fd);

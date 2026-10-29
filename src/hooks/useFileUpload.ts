@@ -12,6 +12,7 @@ import {
   ACCEPTED_DROPZONE_TYPES,
   MAX_FILE_SIZE_BYTES,
 } from "@/lib/document-utils";
+import { UNSUPPORTED_TYPE_MESSAGE } from "@/lib/parse-errors";
 
 interface UseFileUploadReturn {
   parsedData: Chunk[] | null;
@@ -76,7 +77,7 @@ export function useFileUpload(): UseFileUploadReturn {
     }
 
     if (firstError.code === "file-invalid-type") {
-      setError("Unsupported file type. Please upload a PDF or image file.");
+      setError(UNSUPPORTED_TYPE_MESSAGE);
       return;
     }
 

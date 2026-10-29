@@ -2,22 +2,20 @@
 
 ## Purpose
 
-Upload one PDF, PNG, or JPEG and partition it with the Unstructured API. Show the result as readable chunks or as raw JSON.
+Upload one BMP, DOCX, HEIC, JPEG, PDF, PNG, PPTX, or TIFF file and parse it with the Unstructured Transform API. Show the result as readable chunks or as raw JSON.
 
 ## Features as built
 
 - Homepage is a server-rendered shell (`UploadAndParse`) around a client upload island.
-- `react-dropzone` accepts one PDF, PNG, or JPEG up to 4 MB.
-- The server accepts the same types only when the extension matches the MIME type (an empty MIME is allowed) and the bytes match a PDF, PNG, or JPEG signature.
+- `react-dropzone` accepts one BMP, DOCX, HEIC, JPEG, PDF, PNG, PPTX, or TIFF file up to 4 MB.
+- The server accepts the same extensions when the MIME type matches or is empty or `application/octet-stream`, and the bytes match that format. Anything else is rejected before the API is called.
 - The upload UI posts the file to `POST /api/parse`. `parseFile` calls the same `runParse` helper.
 - The route requires an `Origin` whose host matches `x-forwarded-host` or `host`.
 - The route rate-limits each client address to 8 calls per 10 minutes and the process to 40 calls per 10 minutes. The limiter is in memory for that server instance.
-- Callers cannot select Hi-Res. `UNSTRUCTURED_HI_RES=true` on the server selects it. Otherwise the strategy is Auto.
-- JSON responses are `{ ok, message, chunks, demoMessage }`. HTTP status is 200 for a live parse or an intentional demo, 400 for a rejected file, 401 or 403 for an upstream auth or credit failure (with sample chunks), 402 for an upstream quota failure (with sample chunks), 429 for a rate limit, 503 for an upstream 5xx, and 504 for a timeout.
-- User-facing copy is fixed. The API key and raw upstream bodies are not included.
-- Demo mode returns sample chunks and `demoMessage` starting with `Demo mode: sample results` when `UNSTRUCTURED_USE_FIXTURES=true`, when the key or URL is missing, or after an upstream 401, 402, or 403. Validation still runs first. The flag works in production.
-- Live parsing uses `UNSTRUCTURED_API_KEY` and `UNSTRUCTURED_API_URL`. The URL may be the API origin or the full `/general/v0/general` path. The app strips that suffix before giving it to the SDK, which appends the path itself. The client is created on the first live call, with a 120 second timeout and a 15 second retry budget.
-- Partition requests send the whole file (`splitPdfPage: false`), fail if a split page errors, include page breaks, and ask for unique element ids.
+- JSON responses are `{ ok, message, chunks, demoMessage }`. HTTP status is 200 for a live parse or an intentional demo, 400 for a rejected file, 401 or 403 for a bad key, 402 for an out-of-credits response (with sample chunks), 415 for an unsupported type, 429 for a rate limit, 503 for an upstream 5xx, and 504 for a timeout.
+- User-facing copy is fixed. The API key and raw upstream bodies are not logged or returned.
+- A Demo data badge and sample chunks are returned when `UNSTRUCTURED_USE_FIXTURES=true`, when `UNSTRUCTURED_API_KEY` is missing, or when the upstream status is 402 or the payload mentions credits or quota. Validation still runs first.
+- Live parsing posts multipart field `input` to `{UNSTRUCTURED_API_URL}/parse`, default base `https://transform.unstructured.io/api/v2`, with header `unstructured-api-key` and `Prefer: wait=60`, and form field `output=elements`. HTTP 200 is read as elements (`type`, `text`, `element_id`, `metadata.page_number`) or, if elements are empty, as markdown. HTTP 202 is polled at the `Location` header or `poll_url` (`/api/v2/jobs/<id>`) with backoff until `completed` or `completed_with_warnings`, or the overall timeout. A legacy `api.unstructuredapp.io` base is replaced with the Transform default. The poll URL must stay on that host.
 - Chunks break on `Title`, `Heading`, and `PageBreak`. Heading elements stay in the chunk. The readable view does not repeat that heading.
 - Rendered lines and table cells are keyed by position so repeated text is not dropped.
 - Email text becomes a `mailto` link only when it is a single plain address.
@@ -29,12 +27,11 @@ Upload one PDF, PNG, or JPEG and partition it with the Unstructured API. Show th
 
 | Name | When it is read |
 | --- | --- |
-| `UNSTRUCTURED_API_KEY` | Live partition only |
-| `UNSTRUCTURED_API_URL` | Live partition only. Origin or full partition URL |
-| `UNSTRUCTURED_HI_RES` | Live partition only. Exact value `true` enables Hi-Res |
+| `UNSTRUCTURED_API_KEY` | Live parse only. Sent as `unstructured-api-key` |
+| `UNSTRUCTURED_API_URL` | Optional. Transform base. Defaults to `https://transform.unstructured.io/api/v2` |
 | `UNSTRUCTURED_USE_FIXTURES` | After validation. Exact value `true` skips the live API in every environment |
 
-A missing key or URL returns sample results and a demo banner. Production build and CI do not need the API key.
+A missing key returns sample results and a Demo data badge. Production build and CI do not need the API key.
 
 ## User workflow
 
@@ -42,7 +39,7 @@ A missing key or URL returns sample results and a demo banner. Production build 
 2. Drop or choose a supported file under 4 MB.
 3. See a loading state while `POST /api/parse` runs.
 4. Read chunks, or toggle raw JSON.
-5. See an inline error for a rejected file, a blocked origin, a rate limit, or an unavailable service. An auth, credit, or missing-key result shows the demo banner and sample sections. The page shell stays up.
+5. See an inline error for a rejected file, a bad key, a rate limit, or an unavailable service. A missing key or an out-of-credits response shows the Demo data badge and sample sections. The page shell stays up.
 
 ## Architecture
 
@@ -58,13 +55,13 @@ A missing key or URL returns sample results and a demo banner. Production build 
 | Server action | `src/actions/parse.ts` |
 | Origin and rate limit | `src/lib/parse-guard.ts` |
 | Validation and chunking | `src/lib/document-utils.ts` |
-| SDK wrapper | `src/lib/unstructured-client.ts` |
+| Transform client | `src/lib/transform-api.ts` |
 | Fixtures | `src/lib/unstructured-fixtures.ts` |
 | Error copy | `src/lib/parse-errors.ts` |
 | Mailto allowlist | `src/lib/safe-mailto.ts` |
 | Types | `src/types/index.ts` |
 
-UI and hooks use the upload store, which posts to `/api/parse`. The Unstructured SDK stays behind `src/lib/unstructured-client.ts` and `server-only`.
+UI and hooks use the upload store, which posts to `/api/parse`. The Transform client stays behind `src/lib/transform-api.ts` and `server-only`.
 
 ## Element rendering
 

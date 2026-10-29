@@ -1,5 +1,4 @@
 import type { Chunk } from "@/types";
-import { UnstructuredService } from "@/lib/unstructured-client";
 import {
   organizeElementsIntoChunks,
   processFileUpload,
@@ -11,12 +10,13 @@ import {
 } from "@/lib/unstructured-fixtures";
 import {
   DEMO_BANNER,
+  DEMO_CREDITS_BANNER,
   DEMO_UNCONFIGURED_BANNER,
-  classifyUpstreamFailure,
-  demoBannerForFailure,
+  UNAVAILABLE_MESSAGE,
   friendlyParseMessage,
 } from "@/lib/parse-errors";
 import { authorizeParse, type HeaderReader } from "@/lib/parse-guard";
+import { parseWithTransform, resolveTransformBase, TransformRequestError } from "@/lib/transform-api";
 
 export type ParseResponseBody = {
   ok: boolean;
@@ -86,13 +86,12 @@ export async function runParse(
   }
 
   try {
-    const config = UnstructuredService.getConfig();
-    const service = new UnstructuredService(config);
-    const elements = await service.parseDocument(
+    const elements = await parseWithTransform({
       buffer,
       filename,
-      process.env.UNSTRUCTURED_HI_RES === "true",
-    );
+      apiKey: process.env.UNSTRUCTURED_API_KEY?.trim() ?? "",
+      baseURL: resolveTransformBase(process.env.UNSTRUCTURED_API_URL),
+    });
     const chunks = organizeElementsIntoChunks(elements);
     if (chunks.length === 0) {
       return failure(422, "No readable content found.");
@@ -102,16 +101,12 @@ export async function runParse(
       body: { ok: true, message: null, chunks, demoMessage: null },
     };
   } catch (error) {
-    const upstream = classifyUpstreamFailure(error);
-    if (upstream.demoFallback) {
-      return demoResult(
-        filename,
-        upstream.status,
-        false,
-        upstream.message,
-        demoBannerForFailure(upstream),
-      );
+    if (error instanceof TransformRequestError && error.demoFallback) {
+      return demoResult(filename, error.statusCode, false, error.message, DEMO_CREDITS_BANNER);
     }
-    return failure(upstream.status, upstream.message);
+    if (error instanceof TransformRequestError) {
+      return failure(error.statusCode, error.message);
+    }
+    return failure(503, UNAVAILABLE_MESSAGE);
   }
 }

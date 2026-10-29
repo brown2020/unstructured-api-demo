@@ -9,18 +9,7 @@ export interface Metadata {
 
 // Element type now includes new types like Footer and PageNumber
 export interface Element {
-  type:
-    | "Title"
-    | "NarrativeText"
-    | "EmailAddress"
-    | "UncategorizedText"
-    | "PageNumber"
-    | "Image"
-    | "Heading"
-    | "Header"
-    | "Table"
-    | "Footer"
-    | "PageBreak";
+  type: string;
   element_id: string;
   text?: string; // Optional, since some elements (like images) may not have text
   metadata: Metadata; // General metadata for the element

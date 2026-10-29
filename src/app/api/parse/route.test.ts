@@ -2,12 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { POST } from "./route";
 import { resetParseGuardForTests } from "@/lib/parse-guard";
-import { UnstructuredService } from "@/lib/unstructured-client";
-import {
-  AUTH_OR_CREDIT_MESSAGE,
-  QUOTA_MESSAGE,
-  UNAVAILABLE_MESSAGE,
-} from "@/lib/parse-errors";
+import { BAD_KEY_MESSAGE, OUT_OF_CREDITS_MESSAGE, UNSUPPORTED_TYPE_MESSAGE } from "@/lib/parse-errors";
 
 const SECRET = "super-secret-key-value";
 
@@ -29,13 +24,14 @@ function pdfRequest() {
   });
 }
 
-function upstream(status: number) {
-  const error = new Error(`API error occurred: raw body ${SECRET}`);
-  error.name = "UnstructuredClientError";
-  return Object.assign(error, { statusCode: status, body: `raw body ${SECRET}` });
+function jsonResponse(status: number, body: unknown, headers?: Record<string, string>) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "content-type": "application/json", ...headers },
+  });
 }
 
-describe("POST /api/parse", () => {
+describe("POST /api/parse transform errors", () => {
   const prevFixture = process.env.UNSTRUCTURED_USE_FIXTURES;
   const prevKey = process.env.UNSTRUCTURED_API_KEY;
   const prevUrl = process.env.UNSTRUCTURED_API_URL;
@@ -44,10 +40,10 @@ describe("POST /api/parse", () => {
   beforeEach(() => {
     resetParseGuardForTests();
     delete process.env.UNSTRUCTURED_USE_FIXTURES;
-    delete process.env.UNSTRUCTURED_API_KEY;
-    delete process.env.UNSTRUCTURED_API_URL;
+    process.env.UNSTRUCTURED_API_KEY = SECRET;
+    process.env.UNSTRUCTURED_API_URL = "https://transform.unstructured.io/api/v2";
     setNodeEnv("production");
-    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   afterEach(() => {
@@ -58,7 +54,7 @@ describe("POST /api/parse", () => {
     if (prevUrl === undefined) delete process.env.UNSTRUCTURED_API_URL;
     else process.env.UNSTRUCTURED_API_URL = prevUrl;
     setNodeEnv(prevNodeEnv);
-    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   async function read(response: Response) {
@@ -67,98 +63,64 @@ describe("POST /api/parse", () => {
     return body as {
       ok: boolean;
       message: string | null;
-      chunks: Array<{ heading: string | null; content: Array<{ text?: string }> }> | null;
+      chunks: Array<{ heading: string | null }> | null;
       demoMessage: string | null;
     };
   }
 
-  it("returns sample results when the key is missing, including in production", async () => {
-    const response = await POST(pdfRequest());
-    const body = await read(response);
-    expect(response.status).toBe(200);
-    expect(body.ok).toBe(true);
-    expect(body.demoMessage).toBe(
-      "Demo mode: sample results. The parsing service is not configured.",
+  it("returns 401 for a bad key and does not show demo results", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => jsonResponse(401, { code: "unauthorized", message: `bad ${SECRET}` })),
     );
-    expect(body.chunks?.[0]?.heading).toBe("Quarterly Operations Summary");
-  });
-
-  it("returns sample results when UNSTRUCTURED_USE_FIXTURES=true", async () => {
-    process.env.UNSTRUCTURED_USE_FIXTURES = "true";
-    process.env.UNSTRUCTURED_API_KEY = SECRET;
-    process.env.UNSTRUCTURED_API_URL = "https://api.unstructuredapp.io/general/v0/general";
-    const parseDocument = vi.spyOn(UnstructuredService.prototype, "parseDocument");
-
     const response = await POST(pdfRequest());
     const body = await read(response);
-
-    expect(response.status).toBe(200);
-    expect(body.demoMessage).toBe("Demo mode: sample results");
-    expect(body.chunks?.[0]?.heading).toBe("Quarterly Operations Summary");
-    expect(parseDocument).not.toHaveBeenCalled();
-  });
-
-  it("falls back to sample results after a 401 and keeps the status", async () => {
-    process.env.UNSTRUCTURED_API_KEY = SECRET;
-    process.env.UNSTRUCTURED_API_URL = "https://api.unstructuredapp.io/general/v0/general";
-    vi.spyOn(UnstructuredService.prototype, "parseDocument").mockRejectedValue(upstream(401));
-
-    const response = await POST(pdfRequest());
-    const body = await read(response);
-
     expect(response.status).toBe(401);
     expect(body.ok).toBe(false);
-    expect(body.message).toBe(AUTH_OR_CREDIT_MESSAGE);
-    expect(body.demoMessage).toBe(`Demo mode: sample results. ${AUTH_OR_CREDIT_MESSAGE}`);
+    expect(body.message).toBe(BAD_KEY_MESSAGE);
+    expect(body.chunks).toBeNull();
+    expect(body.demoMessage).toBeNull();
+  });
+
+  it("returns demo data after a 402 credit failure", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        jsonResponse(402, { code: "quota_exceeded", message: `out of credits ${SECRET}` }),
+      ),
+    );
+    const response = await POST(pdfRequest());
+    const body = await read(response);
+    expect(response.status).toBe(402);
+    expect(body.message).toBe(OUT_OF_CREDITS_MESSAGE);
+    expect(body.demoMessage).toBe(`Demo data. ${OUT_OF_CREDITS_MESSAGE}`);
     expect(body.chunks?.[0]?.heading).toBe("Quarterly Operations Summary");
   });
 
-  it("falls back after 402 and returns 429 without samples", async () => {
-    process.env.UNSTRUCTURED_API_KEY = SECRET;
-    process.env.UNSTRUCTURED_API_URL = "https://api.unstructuredapp.io";
-    const parseDocument = vi
-      .spyOn(UnstructuredService.prototype, "parseDocument")
-      .mockRejectedValueOnce(upstream(402))
-      .mockRejectedValueOnce(upstream(429));
-
-    const credit = await POST(pdfRequest());
-    const creditBody = await read(credit);
-    expect(credit.status).toBe(402);
-    expect(creditBody.demoMessage).toBe(`Demo mode: sample results. ${QUOTA_MESSAGE}`);
-    expect(creditBody.chunks?.length).toBeGreaterThan(0);
-
-    resetParseGuardForTests();
-    const limited = await POST(pdfRequest());
-    const limitedBody = await read(limited);
-    expect(limited.status).toBe(429);
-    expect(limitedBody.ok).toBe(false);
-    expect(limitedBody.message).toBe(QUOTA_MESSAGE);
-    expect(limitedBody.chunks).toBeNull();
-    expect(limitedBody.demoMessage).toBeNull();
-    expect(parseDocument).toHaveBeenCalledTimes(2);
+  it("returns 415 for an unsupported upstream file", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        jsonResponse(415, { code: "unsupported_file_type", message: `nope ${SECRET}` }),
+      ),
+    );
+    const response = await POST(pdfRequest());
+    const body = await read(response);
+    expect(response.status).toBe(415);
+    expect(body.message).toBe(UNSUPPORTED_TYPE_MESSAGE);
+    expect(body.chunks).toBeNull();
+    expect(body.demoMessage).toBeNull();
   });
 
-  it("returns 503 for an upstream 500 and 504 for a timeout", async () => {
-    process.env.UNSTRUCTURED_API_KEY = SECRET;
-    process.env.UNSTRUCTURED_API_URL = "https://api.unstructuredapp.io/general/v0/general";
-    const timeout = new Error(`timed out ${SECRET}`);
-    timeout.name = "RequestTimeoutError";
-    vi.spyOn(UnstructuredService.prototype, "parseDocument")
-      .mockRejectedValueOnce(upstream(500))
-      .mockRejectedValueOnce(timeout);
-
-    const serverError = await POST(pdfRequest());
-    const serverBody = await read(serverError);
-    expect(serverError.status).toBe(503);
-    expect(serverBody.message).toBe(UNAVAILABLE_MESSAGE);
-    expect(serverBody.chunks).toBeNull();
-    expect(serverBody.demoMessage).toBeNull();
-
-    resetParseGuardForTests();
-    const timedOut = await POST(pdfRequest());
-    const timedBody = await read(timedOut);
-    expect(timedOut.status).toBe(504);
-    expect(timedBody.message).toBe(UNAVAILABLE_MESSAGE);
-    expect(timedBody.chunks).toBeNull();
+  it("shows the Demo data badge when the key is missing", async () => {
+    delete process.env.UNSTRUCTURED_API_KEY;
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const response = await POST(pdfRequest());
+    const body = await read(response);
+    expect(response.status).toBe(200);
+    expect(body.demoMessage).toMatch(/^Demo data/);
+    expect(body.chunks?.[0]?.heading).toBe("Quarterly Operations Summary");
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

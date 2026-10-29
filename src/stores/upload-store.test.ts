@@ -52,12 +52,12 @@ describe("upload store", () => {
     vi.mocked(postParse).mockResolvedValue({
       ok: true,
       chunks: [chunk],
-      demoMessage: "Demo mode: sample results. The parsing service is not configured.",
+      demoMessage: "Demo data. The parsing service is not configured.",
       status: 200,
     });
     await useUploadStore.getState().uploadDocument(pdf());
     expect(useUploadStore.getState().status).toBe("ready");
-    expect(useUploadStore.getState().demoMessage).toMatch(/^Demo mode: sample results/);
+    expect(useUploadStore.getState().demoMessage).toMatch(/^Demo data/);
     expect(useUploadStore.getState().errorMessage).toBeNull();
   });
 

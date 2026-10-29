@@ -13,7 +13,7 @@ This is a Next.js 16 demo application for the Unstructured API, showcasing docum
 - **State Management**: Zustand 5.x
 - **Styling**: Tailwind CSS v4
 - **File Upload**: react-dropzone
-- **API Client**: unstructured-client SDK
+- **API Client**: Unstructured Transform API via `fetch` (`src/lib/transform-api.ts`)
 
 ## Common Commands
 
@@ -44,7 +44,7 @@ src/
 ├── hooks/useFileUpload.ts        # Custom hook for react-dropzone + Zustand
 ├── lib/
 │   ├── document-utils.ts         # File validation, chunking logic
-│   └── unstructured-client.ts    # UnstructuredService API wrapper
+│   └── transform-api.ts          # Transform parse + job polling
 ├── stores/upload-store.ts        # Zustand store for upload state (with race condition protection)
 └── types/index.ts                # TypeScript interfaces
 ```
@@ -64,7 +64,7 @@ Zustand store (`upload-store.ts`) manages:
 ### File Validation
 - Accepted types: PDF, PNG, JPEG
 - Max size: 4MB (under Vercel's 4.5MB function body cap)
-- Constants in `lib/document-utils.ts`: `ACCEPTED_FILE_TYPES`, `MAX_FILE_SIZE_BYTES`
+- Constants in `lib/document-utils.ts`: `ACCEPTED_FILE_TYPES`, `ACCEPTED_DROPZONE_TYPES`, `MAX_FILE_SIZE_BYTES`
 
 ### Document Chunking
 Elements are organized into chunks by `Title` and `Heading` elements plus `PageBreak` markers. `Header` elements are rendered as content. See `organizeElementsIntoChunks()` in `lib/document-utils.ts`.
@@ -74,7 +74,7 @@ Elements are organized into chunks by `Title` and `Heading` elements plus `PageB
 Required in `.env.local`:
 ```
 UNSTRUCTURED_API_KEY=your_api_key
-UNSTRUCTURED_API_URL=https://api.unstructured.io/general/v0/general
+# UNSTRUCTURED_API_URL defaults to https://transform.unstructured.io/api/v2
 ```
 
 ## Key Files for Common Tasks
@@ -83,7 +83,7 @@ UNSTRUCTURED_API_URL=https://api.unstructured.io/general/v0/general
 |------|---------------|
 | Modify upload behavior | `hooks/useFileUpload.ts`, `components/upload/ClientUploadPanel.tsx` |
 | Change file validation | `lib/document-utils.ts` |
-| Modify API calls | `lib/unstructured-client.ts`, `actions/parse.ts` |
+| Modify API calls | `lib/transform-api.ts`, `lib/run-parse.ts`, `app/api/parse/route.ts` |
 | Add element renderers | `components/DocumentElements.tsx` |
 | Adjust chunking logic | `lib/document-utils.ts` |
 | Modify state management | `stores/upload-store.ts` |

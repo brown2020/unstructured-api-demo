@@ -37,7 +37,7 @@ export function ClientUploadPanel() {
         {...getRootProps()}
         className={dropzoneClassName}
         aria-disabled={isDisabled}
-        aria-label="Upload document dropzone. Accepts PDF, PNG, and JPEG under 4MB."
+        aria-label="Upload document dropzone. Accepts BMP, DOCX, HEIC, JPEG, PDF, PNG, PPTX, and TIFF under 4MB."
       >
         <input {...getInputProps()} aria-label="Upload document" />
         <div className="space-y-4">
@@ -52,7 +52,7 @@ export function ClientUploadPanel() {
                 : "Drag & drop your document here, or click to browse"}
           </p>
           <p className="text-sm text-gray-600">
-            Supports PDF, PNG, and JPEG files under 4MB
+            Supports BMP, DOCX, HEIC, JPEG, PDF, PNG, PPTX, and TIFF files under 4MB
           </p>
         </div>
       </div>
@@ -63,7 +63,12 @@ export function ClientUploadPanel() {
           role="status"
           aria-live="polite"
         >
-          <p className="text-amber-950">{demoMessage}</p>
+          <p className="text-amber-950">
+            <span className="mr-2 inline-flex rounded-full bg-amber-200 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-amber-950">
+              Demo data
+            </span>
+            {demoMessage.replace(/^Demo data\.?\s*/, "")}
+          </p>
         </div>
       )}
 

@@ -21,23 +21,23 @@ Run `npm run lint` before committing code changes. For behavior that touches fra
 - `src/stores/upload-store.ts` owns upload state and guards against stale in-flight uploads.
 - `src/actions/parse.ts` is the Server Action boundary for document parsing.
 - `src/lib/document-utils.ts` owns file validation and chunking.
-- `src/lib/unstructured-client.ts` wraps the Unstructured SDK and environment configuration.
+- `src/lib/transform-api.ts` calls the Unstructured Transform API and owns the API key.
 - `src/types/index.ts` contains shared document and API types.
 
-Keep the dependency direction boring: UI and hooks may use store/actions/utilities; server-only SDK code should stay under `src/lib/unstructured-client.ts`; shared types should remain side-effect free.
+Keep the dependency direction boring: UI and hooks may use store/actions/utilities; server-only Transform calls stay under `src/lib/transform-api.ts`; shared types should remain side-effect free.
 
 ## Operating Rules
 
 - Do not read or commit `.env.local`; use `.env.example` for documented environment variable names.
 - Preserve Server Actions for parsing unless a product decision explicitly changes the transport.
 - Keep file validation aligned between `ACCEPTED_DROPZONE_TYPES`, `ACCEPTED_FILE_TYPES`, and server-side checks.
-- Treat `UNSTRUCTURED_API_KEY` and `UNSTRUCTURED_API_URL` as required runtime configuration for real parsing.
+- Treat `UNSTRUCTURED_API_KEY` as required for live parsing. `UNSTRUCTURED_API_URL` is optional and defaults to the Transform v2 base.
 - Prefer focused changes with lint/build verification over broad refactors.
 - Run reports from `$sb-cbi` live under `agent-runs/` and should be committed only as workflow artifacts.
 
 ## Fixtures / CI
 
-- Set `UNSTRUCTURED_USE_FIXTURES=true` for local/CI proofs without burning Unstructured credits. The flag also works in production and shows a demo banner. A missing key uses the same sample path.
+- Set `UNSTRUCTURED_USE_FIXTURES=true` for local/CI proofs without burning Unstructured credits. The flag also works in production and shows a Demo data badge. A missing key or an out-of-credits response uses the same sample path.
 - Fixture short-circuit runs **after** upload validation so denial tests stay honest.
 - Never commit `UNSTRUCTURED_API_KEY` or inline secrets in `.github/workflows/*` — use `${{ secrets.* }}` only when a non-gate job needs them.
 - GitHub Actions gate job must tolerate missing secrets (fixtures + deferred SDK init).

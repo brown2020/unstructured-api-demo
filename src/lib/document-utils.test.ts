@@ -66,7 +66,7 @@ describe("processFileUpload denial", () => {
     const fd = new FormData();
     fd.append("file", new File(["hi"], "notes.txt", { type: "text/plain" }));
     await expect(processFileUpload(fd)).rejects.toThrow(
-      /unsupported|pdf|image/i
+      /not supported/i
     );
   });
 
@@ -168,5 +168,14 @@ describe("validateFileSignature", () => {
     expect(
       validateFileSignature("a.pdf", new TextEncoder().encode("<html>").buffer),
     ).toBe(false);
+    expect(
+      validateFileSignature("a.docx", Uint8Array.from([0x50, 0x4b, 0x03, 0x04]).buffer),
+    ).toBe(true);
+    expect(
+      validateFileSignature("a.bmp", Uint8Array.from([0x42, 0x4d, 0x00]).buffer),
+    ).toBe(true);
+    expect(validateFileSignature("a.gif", Uint8Array.from([0x47, 0x49, 0x46]).buffer)).toBe(
+      false,
+    );
   });
 });

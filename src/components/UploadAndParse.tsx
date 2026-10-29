@@ -11,9 +11,9 @@ export function UploadAndParse() {
           Transform unstructured files into clean, structured data
         </h1>
         <p className="text-base text-gray-600 max-w-2xl mx-auto">
-          Upload PDFs or images and we will stream them through Unstructured.io
-          for layout-aware parsing. Results appear instantly with both readable
-          and raw JSON views.
+          Upload a BMP, DOCX, HEIC, JPEG, PDF, PNG, PPTX, or TIFF file. It is
+          parsed with the Unstructured Transform API, then shown as readable
+          sections or raw JSON.
         </p>
       </header>
 

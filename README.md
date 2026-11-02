@@ -26,7 +26,7 @@ A Next.js demo for [Unstructured](https://unstructured.io). Drop a supported doc
 | Parsing | Transform API `POST /api/v2/parse` (fetch, no SDK) |
 | State | `zustand` `^5.0.16` |
 | Tests | `vitest` `^5.0.5`, `vite` `^8.3.5` |
-| Lint | `eslint` `^10.13.0`, `eslint-config-next` `^16.4.3` |
+| Lint | `eslint` `^10.14.0`, `eslint-config-next` `^16.4.3` |
 | Node | `>=24` (CI uses 24) |
 
 ## Project structure

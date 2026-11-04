@@ -36,6 +36,14 @@ function safeDemoMessage(message: unknown): string | null {
   return message;
 }
 
+async function readParsePayload(response: Response): Promise<ParsePayload> {
+  if (response.ok) {
+    return (await response.json()) as ParsePayload;
+  }
+  // Failed parses use the same JSON shape, including demo chunks on 402.
+  return (await response.json()) as ParsePayload;
+}
+
 export async function postParse(file: File): Promise<ClientParseResult> {
   const formData = new FormData();
   formData.append("file", file);
@@ -49,7 +57,7 @@ export async function postParse(file: File): Promise<ClientParseResult> {
 
   let payload: ParsePayload;
   try {
-    payload = (await response.json()) as ParsePayload;
+    payload = await readParsePayload(response);
   } catch {
     return { ok: false, message: UNAVAILABLE_MESSAGE, status: response.status };
   }

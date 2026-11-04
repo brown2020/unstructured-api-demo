@@ -4,6 +4,13 @@ import { useMemo } from "react";
 import type { Chunk, Element } from "@/types";
 import { DocumentElement } from "./DocumentElements";
 
+function elementRenderKey(elementId: string, seen: Map<string, number>): string {
+  const id = elementId.trim() || "element";
+  const occurrence = seen.get(id) ?? 0;
+  seen.set(id, occurrence + 1);
+  return occurrence === 0 ? id : `${id}:${occurrence}`;
+}
+
 function isPromotedHeading(chunk: Chunk, element: Element, index: number): boolean {
   if (index !== 0 || chunk.heading == null) return false;
   if (element.type !== "Title" && element.type !== "Heading") return false;
@@ -58,6 +65,7 @@ export function DocumentContent({ data, showRawJson }: DocumentContentProps) {
         const visibleContent = chunk.content.filter(
           (item, index) => !isPromotedHeading(chunk, item, index),
         );
+        const seenElementIds = new Map<string, number>();
         return (
           <section
             key={sectionKey}
@@ -69,8 +77,11 @@ export function DocumentContent({ data, showRawJson }: DocumentContentProps) {
               </h2>
             )}
             <div className="space-y-5">
-              {visibleContent.map((item, index) => (
-                <DocumentElement key={`${chunkIndex}:${index}:${item.element_id}`} element={item} />
+              {visibleContent.map((item) => (
+                <DocumentElement
+                  key={elementRenderKey(item.element_id, seenElementIds)}
+                  element={item}
+                />
               ))}
             </div>
           </section>

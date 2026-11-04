@@ -20,13 +20,13 @@ A Next.js demo for [Unstructured](https://unstructured.io). Drop a supported doc
 
 | Layer | Package |
 | --- | --- |
-| Framework | `next` `^16.4.3` (App Router) |
-| UI | `react` `^19.3.1`, `react-dom` `^19.3.1`, `tailwindcss` `^4.3.3`, `react-dropzone` `^20.1.4` |
+| Framework | `next` `^16.4.5` (App Router) |
+| UI | `react` `^19.3.1`, `react-dom` `^19.3.1`, `tailwindcss` `^4.3.4`, `react-dropzone` `^20.1.4` |
 | Language | `typescript` `^6.0.3` |
 | Parsing | Transform API `POST /api/v2/parse` (fetch, no SDK) |
 | State | `zustand` `^5.0.16` |
-| Tests | `vitest` `^5.0.5`, `vite` `^8.3.5` |
-| Lint | `eslint` `^10.14.0`, `eslint-config-next` `^16.4.3` |
+| Tests | `vitest` `^5.1.0`, `vite` `^8.3.5` |
+| Lint | `eslint` `^10.14.0`, `eslint-config-next` `^16.4.5` |
 | Node | `>=24` (CI uses 24) |
 
 ## Project structure
